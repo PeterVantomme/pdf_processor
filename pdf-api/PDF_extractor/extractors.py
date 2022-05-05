@@ -34,7 +34,7 @@ class RCExtractor(Extractor):
 
     def get_info_other_column_based_on_first(self, df, search_string,col=0, row=0):
         str_first_col = self.get_info_first_column(df, search_string)
-        contents = [element for element in df.iloc[:,:].values if str_first_col in element][0][col]
+        contents = [element for element in df.values if str_first_col in element][0][col] #.iloc[:,:]
         if isinstance(contents,list):
             contents = '0.00' if "*****" in contents[0] else contents[row]
         if "*****" in contents:
