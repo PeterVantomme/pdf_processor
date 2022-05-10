@@ -1,6 +1,6 @@
 # QR-code reader using WeChatCV
 ## Imports & global variables
-from .Config import Paths, Auth
+from ..Config import Paths, Auth
 
 ###Decryption
 from base64 import b64encode, b64decode

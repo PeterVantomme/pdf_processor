@@ -1,5 +1,5 @@
 import camelot
-from .Config import Paths as filepaths
+from ..Config import Paths as filepaths
 import pandas as pd
 import re
 import json
