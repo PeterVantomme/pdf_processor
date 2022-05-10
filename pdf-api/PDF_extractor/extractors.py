@@ -1,7 +1,8 @@
-import camelot, itertools
+import camelot
 from .Config import Paths as filepaths
-import numpy as np
 import pandas as pd
+import re
+import json
 
 class Extractor():
     def __init__(self, doc_type, doc_name):
@@ -72,7 +73,6 @@ class RCExtractor(Extractor):
         
 
     def summary_extractor(self):
-        import re
         data = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True, table_areas=['30,650,350,500'])
         df = data[0].df
         vat_number = re.findall("([0-9].+?.+)",df.iloc[0,0])[0]
@@ -85,7 +85,6 @@ class RCExtractor(Extractor):
         return summary
 
     def transform_extraction(self):
-        import json
         rows = self.detail_extractor()
         complete = {"summary":self.summary_extractor(),
                     [line for line in rows if "Verrichtingen en saldi sinds" in line[0]][0][0]:{"saldiverleden":self.get_past_saldi(rows),
@@ -96,3 +95,48 @@ class RCExtractor(Extractor):
     def get_json(self):
         return self.json_result
         
+class PBExtractor(Extractor):
+    def __init__(self, doc_name):
+        super().__init__("PB", doc_name)
+        self.json_result = self.transform_extraction()#automatically calls the extractor methods
+    
+    def transform_extraction(self):
+        complete_info = json.dumps({"klantinfo":self.get_customer_info(),"aanslagbiljet":self.get_data()})
+        return complete_info
+    
+    def get_customer_info(self):
+        customer_info_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True,table_areas=['250,775,620,650'])
+        info = customer_info_table[0]
+        customer_info = [value[0] for value in info.df[2:].values]   
+        return customer_info
+    
+    def get_data(self):
+        data_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,500,620,400'])
+        table = data_table[0].df
+       
+        table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
+        table = pd.DataFrame(table[0]+table[1]) if table.shape[1]>1 else table
+
+        #helper methods
+        amount_to_pay_or_receive_by_index = float([row.split("€")[1].strip() for row in table.loc[:,0] if "€" in row][0].replace(".","").replace(",","."))
+
+        aanslagbiljet_info = {}
+        aanslagbiljet_info["Te betalen bedrag"] = amount_to_pay_or_receive_by_index
+        try:
+            aanslagbiljet_info["Rekeningnummer"] = re.search("[A-Z].[0-9].*[0-9]",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer: ")[1])[0]
+            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling")].values[0][0])[1].strip()
+            aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\/.*",table.loc[table.iloc[:,0].str.contains("ten laatste")].values[0][0])[0]
+        except IndexError: #Aanslagbiljetten tem 2010
+            try:
+                aanslagbiljet_info["Rekeningnummer"] = re.search("[0-9].*-[0-9]*",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer")[1])[0]
+                aanslagbiljet_info["Mededeling"]=0
+                aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\/.*",table.loc[table.iloc[:,0].str.contains("ten laatste")].values[0][0])[0]
+            except (TypeError,IndexError): #Bedrag ontvangen
+                aanslagbiljet_info["Mededeling"]="Ontvangst"
+                aanslagbiljet_info["Te ontvangen bedrag"] = amount_to_pay_or_receive_by_index
+                del aanslagbiljet_info["Te betalen bedrag"]
+
+        return aanslagbiljet_info
+        
+    def get_json(self):
+        return self.json_result

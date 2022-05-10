@@ -1,11 +1,21 @@
-from .extractors import RCExtractor
+from .extractors import RCExtractor, PBExtractor
+import camelot
 from .Transform_Data import transform_file
 from .QR_Interpreter_ZBAR import read_file
+from .Config import Paths as filepaths
+import pandas as pd
 import json
 
 class ExtractorController:
     def assign_to_extractor(self,doc_name):
-        return RCExtractor(doc_name).get_json() #result from extractor
+        tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{doc_name}", flavor='stream', split_text=True, table_areas=['30,650,620,500'])
+        table = tables[0].df
+        table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
+        if len(table.loc[table[0].str.contains("personenbelasting|aanslagbiljet",regex=True, case=False)]) >0:
+            return PBExtractor(doc_name).get_json()
+        elif len(table.loc[table[0].str.contains("Btw-rekeninguittreksel",regex=True, case=False)]) >0:
+            return RCExtractor(doc_name).get_json()
+        #TODO:catchen wanneer niets gevonden
 
 class QRController:
     def get_qr_from_document(self,doc_name):

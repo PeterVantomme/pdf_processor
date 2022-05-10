@@ -1,14 +1,14 @@
 # Process input-pdf to extract QR-code and other pages
 ## Imports & Globals
-from .Config import Paths, Auth
+from .Config import Paths
 import numpy as np
 import fitz
-from cv2 import COLOR_BGR2HSV, COLOR_RGB2GRAY, COLOR_HSV2RGB, COLOR_BGR2RGB, COLOR_RGB2BGR, COLOR_BGR2GRAY, COLOR_GRAY2RGB, MORPH_CLOSE, MORPH_RECT, MORPH_CROSS, MORPH_OPEN, THRESH_BINARY
-from cv2 import cvtColor, filter2D, getStructuringElement, threshold, morphologyEx, resize 
+
 DATA_DIRECTORY = Paths.pdf_path.value
 
 ## Helper zorgt ervoor dat pdf image gelezen kan worden door cv2
 def pix2np(pix):
+    from cv2 import resize, cvtColor, COLOR_BGR2RGB 
     im = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
     im = np.ascontiguousarray(im[...])  # rgb to bgr
     img = resize(cvtColor(im,COLOR_BGR2RGB),(im.shape[1]//3,im.shape[0]//3))
@@ -25,6 +25,8 @@ def transform_pdf_to_png(pdf):
 
 ### Using opencv transformations to make QR-code more readable for system    
 def transform_png(image):
+    from cv2 import COLOR_BGR2HSV, COLOR_RGB2GRAY, COLOR_HSV2RGB, COLOR_RGB2BGR, COLOR_BGR2GRAY, COLOR_GRAY2RGB, MORPH_CLOSE, MORPH_RECT, MORPH_CROSS, MORPH_OPEN, THRESH_BINARY
+    from cv2 import cvtColor, filter2D, getStructuringElement, threshold, morphologyEx
     #Kernels
     kernel = np.array([[0, 0, 0],
                        [0, 1, 0],
@@ -40,17 +42,17 @@ def transform_png(image):
 
     #Transformations
     image = filter2D(src=cvtColor(image, COLOR_BGR2HSV), ddepth=-1, kernel=kernel)
-    thresh = threshold(image,200,255,THRESH_BINARY)[1]
-    thresh = threshold(cvtColor(thresh, COLOR_HSV2RGB), 200, 255, THRESH_BINARY)[1]
-    cmorphed_image = morphologyEx(cvtColor(thresh, COLOR_RGB2GRAY), MORPH_CLOSE, cross_kernel)
+    image = threshold(image,200,255,THRESH_BINARY)[1]
+    image = threshold(cvtColor(image, COLOR_HSV2RGB), 200, 255, THRESH_BINARY)[1]
+    image = morphologyEx(cvtColor(image, COLOR_RGB2GRAY), MORPH_CLOSE, cross_kernel)
     
-    filtered_image = filter2D(src=cmorphed_image, ddepth=-1, kernel=filter_kernel)
-    omorphed_image = morphologyEx(cvtColor(cvtColor(filtered_image, COLOR_RGB2BGR), COLOR_BGR2GRAY), MORPH_OPEN, rect_kernel, iterations=4) 
-    final_morphed_image = morphologyEx(morphologyEx(omorphed_image, MORPH_CLOSE, rect_kernel, iterations=4) , MORPH_OPEN, rect_kernel, iterations=4) 
-    final_thresholded_image = threshold(final_morphed_image, 192, 255, THRESH_BINARY)[1]
-    final_image = cvtColor(filter2D(src=final_thresholded_image, ddepth=5, kernel=sharpening_kernel), COLOR_GRAY2RGB)
-    del image, thresh, filtered_image, omorphed_image, final_thresholded_image
-    return final_image
+    image = filter2D(src=image, ddepth=-1, kernel=filter_kernel)
+    image = morphologyEx(cvtColor(cvtColor(image, COLOR_RGB2BGR), COLOR_BGR2GRAY), MORPH_OPEN, rect_kernel, iterations=4) 
+    image = morphologyEx(morphologyEx(image, MORPH_CLOSE, rect_kernel, iterations=4) , MORPH_OPEN, rect_kernel, iterations=4) 
+    image = threshold(image, 192, 255, THRESH_BINARY)[1]
+    image = cvtColor(filter2D(src=image, ddepth=5, kernel=sharpening_kernel), COLOR_GRAY2RGB)
+
+    return image
 
 ## Remove first page
 def remove_first_page(file):
@@ -68,7 +70,9 @@ def transform_file(file):
         pdf_pages = remove_first_page(pdf)
         pdf_pages.saveIncr()
         pdf_pages.close()
-        del pdf,image, pdf_pages
+        del pdf, image, pdf_pages
+        import gc
+        gc.collect()
         return clean_image
     except fitz.FileDataError:
         raise fitz.FileDataError

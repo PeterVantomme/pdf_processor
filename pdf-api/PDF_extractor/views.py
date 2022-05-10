@@ -8,7 +8,6 @@ from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
 from .Config import Paths
 from django.http import HttpResponse
-import tempfile
 import os
 
 # ViewSets define the view behavior.
@@ -37,16 +36,14 @@ class QR_ViewSet(ViewSet):
     @action(detail=True, methods=['get'])
     def get_file(self, request, filename):
         try:
-            tf = tempfile.TemporaryFile().write(open(f"{Paths.pdf_path.value}/{filename}", "rb").read())
-            os.remove(f"{Paths.pdf_path.value}/{filename}")
-            response = HttpResponse(tf.seek(0), content_type='application/pdf')
+            response = HttpResponse(open(f"{Paths.pdf_path.value}/{filename}", "rb"), content_type='application/pdf')
             response["Content-Disposition"] = 'attachment; filename="%s"' % filename
+            os.remove(f"{Paths.pdf_path.value}/{filename}")
         except FileNotFoundError:
             return Response("File not found")
         return response
 
     def create(self, request):
-        
         file_uploaded = request.FILES.get('file')
         filename = file_uploaded.name
         with open(f"documents/{filename}",  "wb") as f:
