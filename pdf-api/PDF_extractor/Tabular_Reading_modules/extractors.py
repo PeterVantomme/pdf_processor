@@ -99,6 +99,7 @@ class PBExtractor(Extractor):
     def __init__(self, doc_name):
         super().__init__("PB", doc_name)
         self.json_result = self.transform_extraction()#automatically calls the extractor methods
+        self.cleanup_document_location()
     
     def transform_extraction(self):
         complete_info = json.dumps({"klantinfo":self.get_customer_info(),"aanslagbiljet":self.get_data()})

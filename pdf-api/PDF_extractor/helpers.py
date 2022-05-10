@@ -1,7 +1,7 @@
-from Tabular_Reading_modules.extractors import RCExtractor, PBExtractor
+from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor
 import camelot
-from QR_modules.Transform_Data import transform_file
-from QR_modules.QR_Interpreter_ZBAR import read_file
+from .QR_modules.Transform_Data import transform_file
+from .QR_modules.QR_Interpreter_ZBAR import read_file
 from .Config import Paths as filepaths
 import pandas as pd
 import json

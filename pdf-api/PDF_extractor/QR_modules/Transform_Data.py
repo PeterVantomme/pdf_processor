@@ -1,6 +1,6 @@
 # Process input-pdf to extract QR-code and other pages
 ## Imports & Globals
-from .Config import Paths
+from ..Config import Paths
 import numpy as np
 import fitz
 
