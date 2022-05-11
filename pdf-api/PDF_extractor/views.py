@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from .serializers import UploadSerializer, UserSerializer
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
+import gc
 from .Config import Paths
 from django.http import HttpResponse
 import os
@@ -26,6 +27,7 @@ class PDF_Extract_ViewSet(ViewSet):
                 f.write(chunk)
         
         data = ec().assign_to_extractor(filename)
+        gc.collect()
         return Response(data)
 
 # ViewSets define the view behavior.
@@ -39,7 +41,9 @@ class QR_ViewSet(ViewSet):
             response = HttpResponse(open(f"{Paths.pdf_path.value}/{filename}", "rb"), content_type='application/pdf')
             response["Content-Disposition"] = 'attachment; filename="%s"' % filename
             os.remove(f"{Paths.pdf_path.value}/{filename}")
+            gc.collect()
         except FileNotFoundError:
+            gc.collect()
             return Response("File not found")
         return response
 
@@ -51,6 +55,7 @@ class QR_ViewSet(ViewSet):
                 f.write(chunk)
         
         response = qc().get_qr_from_document(filename)
+        gc.collect()
         return Response(response)
 
 
