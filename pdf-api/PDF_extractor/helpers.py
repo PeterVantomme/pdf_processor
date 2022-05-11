@@ -8,7 +8,7 @@ import json
 
 class ExtractorController:
     def assign_to_extractor(self,doc_name):
-        tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{doc_name}", flavor='stream', split_text=True, table_areas=['30,650,620,500'])
+        tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{doc_name}", flavor='stream', split_text=True, table_areas=['30,700,620,500'])
         table = tables[0].df
         table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
         if len(table.loc[table[0].str.contains("personenbelasting|aanslagbiljet",regex=True, case=False)]) >0:
