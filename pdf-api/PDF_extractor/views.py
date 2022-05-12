@@ -1,14 +1,16 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
-from .serializers import UploadSerializer, UserSerializer
+from rest_framework import status
+from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
 import gc
 from .Config import Paths
 from django.http import HttpResponse
+from django.contrib.auth.models import User
 import os
 
 # ViewSets define the view behavior.
@@ -66,4 +68,36 @@ class Userview(RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
-    
+class ChangePasswordView(UpdateAPIView):
+    """
+    An endpoint for changing password.
+    """
+    serializer_class = ChangePasswordSerializer
+    model = User
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self, queryset=None):
+        obj = self.request.user
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            # Check old password
+            if not self.object.check_password(serializer.data.get("old_password")):
+                return Response({"old_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
+            # set_password also hashes the password that the user will get
+            self.object.set_password(serializer.data.get("new_password"))
+            self.object.save()
+            response = {
+                'status': 'success',
+                'code': status.HTTP_200_OK,
+                'message': 'Password updated successfully',
+                'data': []
+            }
+
+            return Response(response)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
