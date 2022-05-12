@@ -15,7 +15,7 @@ class ExtractorController:
             return PBExtractor(doc_name).get_json()
         elif len(table.loc[table[0].str.contains("Btw-rekeninguittreksel",regex=True, case=False)]) >0:
             return RCExtractor(doc_name).get_json()
-        #TODO:catchen wanneer niets gevonden
+        #TODO:catchen wanneer niets gevonden, Akte via regex
 
 class QRController:
     def get_qr_from_document(self,doc_name):

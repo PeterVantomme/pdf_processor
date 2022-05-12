@@ -9,8 +9,6 @@ services:
     volumes:
       - .:/code
     command: gunicorn PDF_project.wsgi:application --bind 0.0.0.0:8000
-    environment:
-      - SECRET_KEY='*v@i6xfe^#$%dsl=0__p_160k(yfqz&yair*soont#q#64j9p2'
   proxy:
     image: nginx:stable-alpine
     ports:

@@ -16,6 +16,9 @@ class Extractor():
     def __get_data(self):
         pass
 
+    def __get_detail(self):
+        pass
+
     def get_json(self):
         pass
 
@@ -156,7 +159,7 @@ class PBExtractor(Extractor):
         self.cleanup_document_location()
     
     def __transform_extraction(self):
-        complete_info = json.dumps({"klantinfo":self.__get_customer_info(),"aanslagbiljet":self.__get_data()})
+        complete_info = json.dumps({"klantinfo":self.__get_customer_info(),"aanslagbiljet":self.__get_data(), "details":self.__get_details()})
         return complete_info
     
     def __get_customer_info(self):
@@ -168,30 +171,46 @@ class PBExtractor(Extractor):
     def __get_data(self):
         data_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,500,620,400'])
         table = data_table[0].df
-       
+        aanslagbiljet_info = {}
         table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
-        table = pd.DataFrame(table[0]+table[1]) if table.shape[1]>1 else table
-
         #helper methods
         amount_to_pay_or_receive_by_index = float([row.split("€")[1].strip() for row in table.loc[:,0] if "€" in row][0].replace(".","").replace(",","."))
-
-        aanslagbiljet_info = {}
         aanslagbiljet_info["Te betalen bedrag"] = amount_to_pay_or_receive_by_index
         try:
             aanslagbiljet_info["Rekeningnummer"] = re.search("[A-Z].[0-9].*[0-9]",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer: ")[1])[0]
-            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling")].values[0][0])[1].strip()
-            aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\/.*",table.loc[table.iloc[:,0].str.contains("ten laatste")].values[0][0])[0]
-        except IndexError: #Aanslagbiljetten tem 2010
-            try:
-                aanslagbiljet_info["Rekeningnummer"] = re.search("[0-9].*-[0-9]*",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer")[1])[0]
-                aanslagbiljet_info["Mededeling"]=0
-                aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\/.*",table.loc[table.iloc[:,0].str.contains("ten laatste")].values[0][0])[0]
-            except (TypeError,IndexError): #Bedrag ontvangen
-                aanslagbiljet_info["Mededeling"]="Ontvangst"
-                aanslagbiljet_info["Te ontvangen bedrag"] = amount_to_pay_or_receive_by_index
-                del aanslagbiljet_info["Te betalen bedrag"]
+        except IndexError:
+            aanslagbiljet_info["Rekeningnummer"] = re.search(re.compile("[A-Z].[0-9].*[0-9]"),table.loc[table.iloc[:,0].str.contains("compte bancaire")].values[0][0])[0]
+        try:
+            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling|communication structurée", regex=True, case=False)].values[0][0])[1].strip()  
+            aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\/.*",table.loc[table.iloc[:,0].str.contains("ten laatste|au plus tard le", regex=True, case=False)].values[0][0])[0]
+        except IndexError: #Terug te krijgen bedrag ipv te betalen
+            aanslagbiljet_info["Bedrag in uw voordeel"] = aanslagbiljet_info["Te betalen bedrag"]
+            del aanslagbiljet_info["Te betalen bedrag"]
 
         return aanslagbiljet_info
+
+    def __get_details(self):
+        tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,700,625,500'], pages="3")
+        df = tables[0].df
+        start_idx_row = df[df[0].str.contains("[Cc]ode",regex=True, case=True) == True].index[0]
+        data = df.iloc[start_idx_row:,:].reset_index(drop=True)
+        data_code_idx = np.where(data.iloc[0,:].str.contains("[Cc]ode", regex=True, case=True)==True)[0]
+        data_code = data.iloc[:,data_code_idx]
+        data_amount_idx = np.where(data.iloc[0,:].str.contains("[Gg]egevens|Donnée", regex=True, case=True)==True)[0]
+        data_amount = data.iloc[:,data_amount_idx]
+        data_cstacked = pd.DataFrame(data_code.stack()).melt(ignore_index=True)
+        data_astacked = pd.DataFrame(data_amount.stack()).melt(ignore_index=True)
+        final_data = pd.concat([data_cstacked, data_astacked], axis=1).drop("variable",axis=1).drop_duplicates()
+        final_data.columns = final_data.iloc[0]
+        try:
+            final_data = final_data[~final_data['Gegevens'].str.contains("[a-zA-Z]").fillna(False)]
+        except KeyError:#FR
+            final_data = final_data[~final_data['Donnée'].str.contains("[a-zA-Z]").fillna(False)]
+
+        final_data = final_data[~final_data['Code'].str.contains("[a-zA-Z]").fillna(False)]
+        final_data = final_data[final_data['Code'].map(len) > 0].reset_index(drop=True).T
+        data_info = final_data.to_dict()
+        return data_info
         
     def get_json(self):
         return self.json_result
