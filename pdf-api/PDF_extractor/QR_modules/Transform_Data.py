@@ -11,7 +11,7 @@ def pix2np(pix):
     from cv2 import resize, cvtColor, COLOR_BGR2RGB 
     im = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.h, pix.w, pix.n)
     im = np.ascontiguousarray(im[...])  # rgb to bgr
-    img = resize(cvtColor(im,COLOR_BGR2RGB),(im.shape[1]//3,im.shape[0]//3))
+    img = resize(cvtColor(im,COLOR_BGR2RGB),(im.shape[1]//1,im.shape[0]//1))
     del im
     return img
 

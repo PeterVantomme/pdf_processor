@@ -8,8 +8,7 @@ COPY . .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 RUN apt-get update
 RUN apt-get -y install ghostscript python3-tk 
-RUN apt-get install ffmpeg libzbar0 -y
-#RUN apt-get install build-essential python -y
+RUN apt-get install ffmpeg libzbar0 tesseract-ocr -y
 RUN chmod -R 755 documents
 RUN chmod -R 700 db.sqlite3
 RUN useradd -ms /bin/bash docker

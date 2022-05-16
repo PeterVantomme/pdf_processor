@@ -1,9 +1,11 @@
-import camelot
+from cgitb import text
+from logging import raiseExceptions
 from ..Config import Paths as filepaths
 import pandas as pd
-import re
+import re, json, fitz, camelot, cv2, pytesseract, os
 import numpy as np
-import json
+from PIL import Image
+
 
 class Extractor():
     def __init__(self, doc_type, doc_name):
@@ -23,7 +25,6 @@ class Extractor():
         pass
 
     def cleanup_document_location(self):
-        import os
         os.remove(f"{filepaths.pdf_path.value}/{self.doc_name}")
 
 class RCExtractor(Extractor):
@@ -212,5 +213,112 @@ class PBExtractor(Extractor):
         data_info = final_data.to_dict()
         return data_info
         
+    def get_json(self):
+        return self.json_result
+
+class AkteExtractor(Extractor):
+    def __init__(self, doc_name):
+        super().__init__("Akte", doc_name)
+        self.json_result = self.__transform_extraction()#automatically calls the extractor methods
+        self.cleanup_document_location()
+    
+    def __transform_extraction(self):
+        datadict = {}
+        pdf = fitz.open(f"{filepaths.pdf_path.value}/{self.doc_name}")
+        reference_code, annot_list = self.__get_data_from_annots(pdf)
+        if reference_code is None:
+            reference_code = self.__get_reference_code_from_text(pdf)
+            if reference_code is None:
+                datadict["Reference Code"] = "Error - not detected within document."
+            else:
+                datadict["Reference Code"] = reference_code
+        if isinstance(reference_code,str)==False:
+            reference_code = reference_code[0]
+        datadict["Reference Code"] = reference_code
+        datadict["Annotations"] = annot_list
+        try:
+            text_data = self.__get_data_from_selectable_text(pdf)
+            if text_data is None or len(text_data.columns)<3:
+                datadict["Extra data from text"] = self.__get_data_from_ocr(pdf)
+            else:
+                datadict["Extra data from text"] = list(text_data.columns)
+        except Exception:
+            datadict["Extra data from text"] = self.__get_data_from_ocr(pdf)
+
+        return json.dumps(datadict)
+
+    def __get_data_from_annots(self, pdf):
+        annot_list = []
+        annots = pdf[0].annots(types=fitz.PDF_ANNOT_SQUARE)
+        for annot in annots:
+            annot_content = annot.get_text(option="text")
+            annot_list.append(annot_content) if len(annot_content)>0 else 0
+
+        annot_list = [element.split("\n") for element in annot_list]
+        annot_list = [subitem for item in annot_list for subitem in item if len(subitem)>0]
+
+        #2 - Controleer of annotaties de aktereferentiecode bevatten
+        ref_regex = re.compile("[0-9].-[A-Z]-([0-9].\/)*[0-9]{4}-[0-9]{5}")
+        reference_code = [element for element in annot_list if re.search(ref_regex,element)]
+
+        if len(reference_code)<1:
+            #Geen referentiecode gedetecteerd in annots
+            text_page_1 = pdf[0].get_text()
+            reference_code = re.search(ref_regex,text_page_1)
+            reference_code = None if reference_code is None else reference_code[0]
+        return reference_code, annot_list
+
+    def __get_data_from_selectable_text(self, pdf, get_ref_code=False):
+        if isinstance(pdf,str) == False or isinstance(pdf, type(fitz.Document)):
+            textstring = pdf[0].get_text()
+        else:
+            textstring = pdf
+        if len(textstring) == 0:
+            raise Exception("No selectable text, run on OCR")
+        textstring = textstring.replace(","," ").replace(".","\next").replace("?","\next").replace("\n","\next").replace('"',' ').replace("!","\next").split("\next")
+        worddict={}
+        if get_ref_code:
+            ref_regex = re.compile("[0-9].-[A-Z]-([0-9].\/)*[0-9]{4}-[0-9]{5}")
+            return re.search(ref_regex, textstring)
+        for word in textstring:
+            if word in worddict.keys():
+                worddict[word] += 1
+            else:
+                worddict[word] = 1
+        reg_col = re.compile("([0-9]{1,}){0,}.(?:[A-Z]{3,})")
+        df = pd.DataFrame.from_dict(worddict, orient="index").sort_values(by=0).T
+        necessary_cols = [col for col in df.columns if re.search(reg_col,col)]
+        df = df.loc[:,necessary_cols]
+        df.columns = [re.search(reg_col,col)[0].strip() for col in df.columns]
+        df = df.loc[:,~df.columns.duplicated()]
+        return df
+
+    #4 - Via OCR-extraheren
+    def __get_data_from_ocr(self, pdf, get_ref_code=False):
+        textstring = ""
+        max_range = pdf.page_count if get_ref_code else 3
+        for i in range(max_range): #Checks first 3 pages for content, no more because it would take alot of and resources.
+            img_first_page = fitz.Pixmap(pdf, pdf.get_page_images(i)[0][0])
+            img_first_page.save("temp_img_text.jpg")
+            del img_first_page
+            img = cv2.imread("temp_img_text.jpg")
+            os.remove("temp_img_text.jpg")
+            textstring += pytesseract.image_to_string(img) 
+        if get_ref_code:
+            ref_regex = re.compile("[0-9].-[A-Z]-([0-9].\/)*[0-9]{4}-[0-9]{5}")
+            return re.search(ref_regex, textstring)
+        text1_worddf = self.__get_data_from_selectable_text(textstring)
+        return list(text1_worddf.columns)
+    
+    def __get_reference_code_from_text(self, pdf):
+        try:
+            ref = self.__get_data_from_selectable_text(pdf, True)
+        except Exception as e:
+            ref = self.__get_data_from_ocr(pdf, True)
+        if ref is None:
+            return None
+        else:
+            return ref[0]
+    
     def get_json(self):
         return self.json_result
