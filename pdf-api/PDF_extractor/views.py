@@ -18,19 +18,17 @@ class PDF_Extract_ViewSet(ViewSet):
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
 
-    def list(self, request):
-        return Response("Online")
-
-    def create(self, request):
+    @action(detail=True, methods=['post'])
+    def extract_data(self, request, filetype):
         file_uploaded = request.FILES.get('file')
         filename = file_uploaded.name
         with open(f"{Paths.pdf_path.value}/{filename}",  "wb") as f:
             for chunk in file_uploaded.chunks():
                 f.write(chunk)
-        
-        data = ec().assign_to_extractor(filename)
+        data = ec().assign_to_extractor(filename, filetype)
         gc.collect()
         return Response(data)
+        
 
 # ViewSets define the view behavior.
 class QR_ViewSet(ViewSet):

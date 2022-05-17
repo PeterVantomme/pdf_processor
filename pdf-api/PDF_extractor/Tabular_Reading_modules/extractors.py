@@ -1,10 +1,14 @@
-from cgitb import text
-from logging import raiseExceptions
-from ..Config import Paths as filepaths
-import pandas as pd
-import re, json, fitz, camelot, cv2, pytesseract, os
+import json
+import os
+import re
+import camelot
+import cv2
+import fitz
 import numpy as np
-from PIL import Image
+import pandas as pd
+import pytesseract
+
+from ..Config import Paths as filepaths
 
 
 class Extractor():

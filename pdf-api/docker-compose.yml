@@ -8,7 +8,7 @@ services:
       - 8000
     volumes:
       - .:/code
-    command: gunicorn PDF_project.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn PDF_project.wsgi:application --bind 0.0.0.0:8000 --threads 5 --workers 1
   proxy:
     image: nginx:stable-alpine
     ports:

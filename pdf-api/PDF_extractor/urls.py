@@ -15,5 +15,5 @@ urlpatterns = [
     path('user/', Userview.as_view(), name='user'),
     path('user/change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('qr/<str:filename>', QR_ViewSet.as_view({'get': 'get_file'}), name='qr_file'),
-   
+    path('extract/<str:filetype>', PDF_Extract_ViewSet.as_view({'post': 'extract_data'}), name='extract_data'),
 ]

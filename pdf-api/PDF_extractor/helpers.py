@@ -1,25 +1,20 @@
 from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor
-import camelot
 from .QR_modules.Transform_Data import transform_file
 from .QR_modules.QR_Interpreter_ZBAR import read_file
-from .Config import Paths as filepaths
-import pandas as pd
 import json
 
 class ExtractorController:
-    def assign_to_extractor(self,doc_name):
-        try:
-            tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{doc_name}", flavor='stream', split_text=True, table_areas=['30,700,620,500'])
-            table = tables[0].df
-            table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
-            if len(table.loc[table[0].str.contains("personenbelasting|aanslagbiljet|avertissement-extrait de rôle",regex=True, case=False)]) >0:
-                return PBExtractor(doc_name).get_json()
-            elif len(table.loc[table[0].str.contains("Btw-rekeninguittreksel",regex=True, case=False)]) >0:
-                return RCExtractor(doc_name).get_json()
-            else:
-                return AkteExtractor(doc_name).get_json()
-        except IndexError:
-            return AkteExtractor(doc_name).get_json()
+    def assign_to_extractor(self, doc_name, filetype):
+        filetype = filetype.lower().strip()
+        if filetype in ["rekening courant", "rc", "compte courant"]:
+            extractor = RCExtractor(doc_name)
+        elif filetype in ["pb","personenbelasting","impôt sur le revenu","impôt"]:
+            extractor = PBExtractor(doc_name)
+        elif filetype in ["akte","acte"]:
+            extractor = AkteExtractor(doc_name)
+        else:
+            return "Filetype not supported"
+        return extractor.get_json()
 
 class QRController:
     def get_qr_from_document(self,doc_name):
