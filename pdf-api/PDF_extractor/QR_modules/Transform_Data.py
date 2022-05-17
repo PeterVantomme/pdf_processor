@@ -66,16 +66,19 @@ def transform_file(file):
     try:
         pdf = fitz.open(f'{DATA_DIRECTORY}/{file}')
         image = transform_pdf_to_png(pdf)
-        clean_image = transform_png(image)
         pdf_pages = remove_first_page(pdf)
         pdf_pages.saveIncr()
         pdf_pages.close()
-        del pdf, image, pdf_pages
+        del pdf, pdf_pages
         import gc
         gc.collect()
-        return clean_image
+        return image
     except fitz.FileDataError:
         raise fitz.FileDataError
     except FileNotFoundError:
         raise FileNotFoundError
+
+def transform_image(image):
+    clean_image = transform_png(image)
+    return clean_image
             

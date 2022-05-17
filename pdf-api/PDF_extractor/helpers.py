@@ -1,5 +1,5 @@
 from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor
-from .QR_modules.Transform_Data import transform_file
+from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
 import json
 
@@ -13,15 +13,17 @@ class ExtractorController:
         elif filetype in ["akte","acte"]:
             extractor = AkteExtractor(doc_name)
         else:
-            return "Filetype not supported"
+            return "Filetype not supported \n Supported filetypes URI's: /rc, /pb, /akte"
         return extractor.get_json()
 
 class QRController:
     def get_qr_from_document(self,doc_name):
-        return self.__structure_data(self.__interpret(self.__transform(doc_name)), doc_name)
-
-    def __transform(self,doc_name):
-        return transform_file(doc_name) #Returns clean image
+        image = transform_file(doc_name)
+        try:
+            output = self.__interpret(image)
+        except IndexError:
+            output = self.__interpret(transform_image(image))
+        return self.__structure_data(output, doc_name)
 
     def __interpret(self,image):
         return read_file(image) #Returns QR code
