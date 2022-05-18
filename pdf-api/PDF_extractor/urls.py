@@ -17,4 +17,5 @@ urlpatterns = [
     path('qr/<str:filename>', QR_ViewSet.as_view({'get': 'get_file'}), name='qr_file'),
     path('extract/<str:filetype>', PDF_Extract_ViewSet.as_view({'post': 'extract_data'}), name='extract_data'),
     path('register/', RegisterView.as_view(), name='auth_register'),
+    path('qr/', QR_ViewSet.as_view({'post': 'create'}), name='qr_create'),
 ]
