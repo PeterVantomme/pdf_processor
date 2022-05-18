@@ -1,0 +1,36 @@
+_id: req_81115eeabe0943f3b5695133739e1813
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1652863292691
+created: 1651738287082
+url: https://localhost/qr/
+name: Send_QR
+description: ""
+method: POST
+body:
+  mimeType: multipart/form-data
+  params:
+    - id: pair_88e8c5fabdc049eb87048a8fbbca193c
+      name: file
+      value: ""
+      description: ""
+      type: file
+      fileName: C:\Users\pva677\Downloads\HPD201324TC-20220202-122003-014.pdf
+parameters: []
+headers:
+  - name: Content-Type
+    value: multipart/form-data
+    id: pair_18da25c4f30c42819f76d77a6a64928b
+  - id: pair_7ab9f09338264f48b4425e11e9cf574e
+    name: Authorization
+    value: Bearer {{ _.token }}
+    description: ""
+authentication: {}
+metaSortKey: -1652298116457
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

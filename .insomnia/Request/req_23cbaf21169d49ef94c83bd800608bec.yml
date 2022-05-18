@@ -1,0 +1,34 @@
+_id: req_23cbaf21169d49ef94c83bd800608bec
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1652863279811
+created: 1652347477228
+url: http://127.0.0.1/token/refresh/
+name: Refresh
+description: ""
+method: POST
+body:
+  mimeType: multipart/form-data
+  params:
+    - id: pair_7c8d103b7fe04afb9127ee995d53bc3e
+      name: refresh
+      value: "{{ _.refresh }}"
+      description: ""
+parameters: []
+headers:
+  - name: Content-Type
+    value: multipart/form-data
+    id: pair_b377a5902aab46f2b7361d207490a746
+  - id: pair_3ccaf292ac544e14b25f1dec14a0a1a7
+    name: ""
+    value: ""
+    description: ""
+authentication: {}
+metaSortKey: -1652298116694.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
