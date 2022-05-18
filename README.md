@@ -1,5 +1,4 @@
 # pdf_processor v1
----
 ## Usage:
 - Use docker-compose to start the application within a Docker environment
 - Register a new user
