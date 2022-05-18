@@ -1,0 +1,42 @@
+_id: req_8f0040299cdf4d1081008a241521d4a4
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1652863275998
+created: 1652857735889
+url: https://127.0.0.1/register/
+name: Create User
+description: ""
+method: POST
+body:
+  mimeType: multipart/form-data
+  params:
+    - id: pair_83baeef283604b3c8d953c217dfd0a5b
+      name: username
+      value: "{{ _.username }}"
+      description: ""
+    - id: pair_5784ce85fa33458a89f61795b927a17f
+      name: password
+      value: "{{ _.password }}"
+      description: ""
+    - id: pair_97c39b4d74ab4ba1b6374b1b6b3d7816
+      name: password2
+      value: "{{ _.password }}"
+      description: ""
+    - id: pair_623fd555280643438a280999161a951e
+      name: email
+      value: "{{ _.email }}"
+      description: ""
+parameters: []
+headers:
+  - name: Content-Type
+    value: multipart/form-data
+    id: pair_497780c048bf49528706e41e79427090
+authentication: {}
+metaSortKey: -1652298116794.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

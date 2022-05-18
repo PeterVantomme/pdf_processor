@@ -1,0 +1,31 @@
+_id: env_639a198098c84ecea3f81716a5d86498
+type: Environment
+parentId: env_9007dc366c1358e7bd893c6835368d3b9e9833d2
+modified: 1652859489657
+created: 1651733185236
+name: PDF_Analyzer
+data:
+  token: "{% response 'body', 'req_ae07cdac4bb04a08911c8ca5da85dbbc',
+    'b64::JC5hY2Nlc3M=::46b', 'when-expired', 300 %}"
+  refresh: "{% response 'body', 'req_ae07cdac4bb04a08911c8ca5da85dbbc',
+    'b64::JC5yZWZyZXNo::46b', 'when-expired', 300 %}"
+  username: Admin
+  password: Verlo84615
+  email: peter.vantomme@titeca.be
+  scheme: http
+  main_url: 127.0.0.1:8000
+  qr_path: "{% response 'raw', 'req_81115eeabe0943f3b5695133739e1813', '',
+    'never', 60 %}"
+dataPropertyOrder:
+  "&":
+    - token
+    - refresh
+    - username
+    - password
+    - email
+    - scheme
+    - main_url
+    - qr_path
+color: "#ff0000"
+isPrivate: false
+metaSortKey: 1651733185236
