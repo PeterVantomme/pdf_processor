@@ -24,3 +24,7 @@
 - Current version supports rc, pb and ak information extraction as well as QR-code reading.
 - Secret key generated upon starting server.
 - Nginx & Gunicorn WSGI as supporting reverse proxy & webserver
+
+## Todo:
+18/05/2022:
+- Add exception messages.
