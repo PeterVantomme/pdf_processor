@@ -300,7 +300,7 @@ class AkteExtractor(Extractor):
     #4 - Via OCR-extraheren
     def __get_data_from_ocr(self, pdf, get_ref_code=False):
         textstring = ""
-        max_range = pdf.page_count if get_ref_code else 3
+        max_range = pdf.page_count if get_ref_code else pdf.page_count if pdf.page_count<3 else 3
         for i in range(max_range): #Checks first 3 pages for content, no more because it would take alot of and resources.
             img_first_page = fitz.Pixmap(pdf, pdf.get_page_images(i)[0][0])
             img_first_page.save("temp_img_text.jpg")
