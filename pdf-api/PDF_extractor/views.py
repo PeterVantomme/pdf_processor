@@ -1,10 +1,10 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
-from rest_framework.generics import RetrieveAPIView, UpdateAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView, CreateAPIView
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework import status
-from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer
+from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer, RegisterSerializer
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
 import gc
@@ -15,6 +15,9 @@ import os
 
 # ViewSets define the view behavior.
 class PDF_Extract_ViewSet(ViewSet):
+    """
+    An endpoint extracting information from PDF (RC/PB/AK).
+    """
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -32,6 +35,9 @@ class PDF_Extract_ViewSet(ViewSet):
 
 # ViewSets define the view behavior.
 class QR_ViewSet(ViewSet):
+    """
+    An endpoint for processing QR & returning remaining pages.
+    """
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -65,6 +71,10 @@ class Userview(RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+class RegisterView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
 
 class ChangePasswordView(UpdateAPIView):
     """

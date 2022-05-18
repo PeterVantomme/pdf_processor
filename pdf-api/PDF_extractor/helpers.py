@@ -10,7 +10,7 @@ class ExtractorController:
             extractor = RCExtractor(doc_name)
         elif filetype in ["pb","personenbelasting","impôt sur le revenu","impôt"]:
             extractor = PBExtractor(doc_name)
-        elif filetype in ["akte","acte"]:
+        elif filetype in ["akte","acte", "ak"]:
             extractor = AkteExtractor(doc_name)
         else:
             return "Filetype not supported \n Supported filetypes URI's: /rc, /pb, /akte"
