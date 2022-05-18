@@ -17,7 +17,7 @@
 - /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
 - /qr/{filename} : returns file with relevant pages.
  
-**All URI's besides register require an authorization header with Bearer <token>**
+**All URI's besides register require an authorization header with Bearer {token}**
   
 ## Changelog:
 18/05/2022: 
