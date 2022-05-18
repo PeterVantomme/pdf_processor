@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import pandas as pd
-
+from django.core.management.utils import get_random_secret_key  
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,9 +20,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = pd.read_csv("PDF_project/.env",sep="=").iloc[0,1]
+#SECURITY WARNING: keep the secret key used in production secret!
 
+#SECRET_KEY = get_random_secret_key()
+#SECRET_KEY = pd.read_csv("PDF_project/.env",sep="=").iloc[0,1]
+SECRET_KEY = str(get_random_secret_key())
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
