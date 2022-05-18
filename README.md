@@ -15,7 +15,7 @@
 - /extract/pb : accepts multipart form data with file & returns JSON with information about the document.
 - /extract/ak : accepts multipart form data with file & returns JSON with information about the document.
 - /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
-- /qr/<filename> : returns file with relevant pages.
+- /qr/{filename} : returns file with relevant pages.
  
 **All URI's besides register require an authorization header with Bearer <token>**
   
