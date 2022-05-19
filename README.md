@@ -16,16 +16,24 @@
 - /extract/ak : accepts multipart form data with file & returns JSON with information about the document.
 - /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
 - /qr/{filename} : returns file with relevant pages.
+- /cleanup : removes QR-files that weren't requested.
  
 **All URI's besides register require an authorization header with Bearer {token}**
   
 ## Changelog:
+19/05/2022:
+- Fixed BUG where RC-extractor didnt't recognise more than two rows of the "Toestand" type.
+- Added Cleanup URI functionality so user can remove unnecessary files.
+- Reworked RC to work more efficiënt.
+
 18/05/2022: 
 - Current version supports rc, pb and ak information extraction as well as QR-code reading.
 - Secret key generated upon starting server.
 - Nginx & Gunicorn WSGI as supporting reverse proxy & webserver
 
 ## Todo:
+19/05/2022:
+- Create manual for creating new extractors and usage of the API.
+
 18/05/2022:
 - Add exception messages.
-- Fix BUG in RC-extractor for RC_T3 --> irregular table structure
