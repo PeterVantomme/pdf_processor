@@ -20,6 +20,9 @@
 **All URI's besides register require an authorization header with Bearer {token}**
   
 ## Changelog:
+19/05/2022:
+- Fixed BUG where RC-extractor didnt't recognise more than two rows of the "Toestand" type.
+
 18/05/2022: 
 - Current version supports rc, pb and ak information extraction as well as QR-code reading.
 - Secret key generated upon starting server.
@@ -28,4 +31,3 @@
 ## Todo:
 18/05/2022:
 - Add exception messages.
-- Fix BUG in RC-extractor for RC_T3 --> irregular table structure
