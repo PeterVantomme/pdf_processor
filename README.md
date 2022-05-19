@@ -28,3 +28,4 @@
 ## Todo:
 18/05/2022:
 - Add exception messages.
+- Fix BUG in RC-extractor for RC_T3 --> irregular table structure
