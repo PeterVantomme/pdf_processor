@@ -271,8 +271,8 @@ class AkteExtractor(Extractor):
             del img_first_page
             img = cv2.imread("temp_img_text.jpg")
             os.remove("temp_img_text.jpg")
-            del img
             textstring += pytesseract.image_to_string(img) 
+            del img
         if get_ref_code:
             ref_regex = re.compile("[0-9].-[A-Z]-([0-9].\/)*[0-9]{4}-[0-9]{5}")
             return re.search(ref_regex, textstring)

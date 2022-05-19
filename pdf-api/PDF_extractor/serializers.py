@@ -49,4 +49,4 @@ class RegisterSerializer(ModelSerializer):
 class ChangePasswordSerializer(Serializer):
     model=get_user_model()
     old_password=CharField(required=True, max_length=32)
-    new_password=CharField(required=True, max_length=32)
+    new_password=CharField(required=True, max_length=32, validators=[validate_password])

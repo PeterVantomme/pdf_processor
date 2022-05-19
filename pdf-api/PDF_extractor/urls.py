@@ -18,5 +18,5 @@ urlpatterns = [
     path('extract/<str:filetype>', PDF_Extract_ViewSet.as_view({'post': 'extract_data'}), name='extract_data'),
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('qr/', QR_ViewSet.as_view({'post': 'create'}), name='qr_create'),
-    path('cleanup/', CleanupView.as_view({'get': 'cleanup'}), name='cleanup'),
+    path('cleanup/', CleanupView.as_view({'delete': 'cleanup'}), name='cleanup'),
 ]
