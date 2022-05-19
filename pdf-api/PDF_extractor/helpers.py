@@ -1,4 +1,4 @@
-from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor
+from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor, VBExtractor
 from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
 import json
@@ -10,6 +10,8 @@ class ExtractorController:
             extractor = RCExtractor(doc_name)
         elif filetype in ["pb","personenbelasting","impôt sur le revenu","impôt"]:
             extractor = PBExtractor(doc_name)
+        elif filetype in ["vb","vennootschapsbelasting"]:
+            extractor = VBExtractor(doc_name)
         elif filetype in ["akte","acte", "ak"]:
             extractor = AkteExtractor(doc_name)
         else:

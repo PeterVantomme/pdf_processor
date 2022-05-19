@@ -184,6 +184,46 @@ class PBExtractor(Extractor):
     def get_json(self):
         return self.json_result
 
+class VBExtractor(Extractor):
+    def __init__(self, doc_name):
+        super().__init__("PB", doc_name)
+        self.json_result = self.__transform_extraction()#automatically calls the extractor methods
+        self.cleanup_document_location()
+
+    def __transform_extraction(self):
+        complete_info = json.dumps({"klanteninfo":self.__get_customer_info(), "Betaling/Ontvangs/Overdracht":self.__get_data()})
+        return complete_info
+
+    def __get_customer_info(self):
+        customer_info_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True,table_areas=['250,775,620,650'])
+        info = customer_info_table[0]
+        customer_info = [value[0] for value in info.df[2:].values]   
+        return customer_info
+
+    def __get_data(self):
+        data_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,500,620,400'])
+        table = data_table[0].df
+        aanslagbiljet_info = {}
+        table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
+        #helper methods
+        amount_to_pay_or_receive_by_index = float([row.split("€")[1].strip() for row in table.loc[:,0] if "€" in row][0].replace(".","").replace(",","."))
+        aanslagbiljet_info["Te betalen bedrag"] = amount_to_pay_or_receive_by_index
+        try:
+            aanslagbiljet_info["Rekeningnummer"] = re.search("[A-Z].[0-9].*[0-9]",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer: ")[1])[0]
+        except IndexError:
+            aanslagbiljet_info["Rekeningnummer"] = re.search(re.compile("[A-Z].[0-9].*[0-9]"),table.loc[table.iloc[:,0].str.contains("compte bancaire")].values[0][0])[0]
+        try:
+            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling|communication structurée", regex=True, case=False)].values[0][0])[1].strip()  
+            aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\..*",table.loc[table.iloc[:,0].str.contains("ten laatste|au plus tard le", regex=True, case=False)].values[0][0])[0]
+        except IndexError: #Terug te krijgen bedrag ipv te betalen
+            aanslagbiljet_info["Bedrag in uw voordeel"] = aanslagbiljet_info["Te betalen bedrag"]
+            del aanslagbiljet_info["Te betalen bedrag"]
+
+        return aanslagbiljet_info
+
+    def get_json(self):
+        return self.json_result
+
 class AkteExtractor(Extractor):
     def __init__(self, doc_name):
         super().__init__("Akte", doc_name)
