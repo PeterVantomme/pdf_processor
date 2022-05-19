@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView, CreateAPIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework import status
 from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer, RegisterSerializer
@@ -75,6 +75,16 @@ class Userview(RetrieveAPIView):
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+
+class CleanupView(ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    @action(detail=False, methods=['get'])
+    def cleanup(self, request):
+        files = os.listdir(Paths.pdf_path.value)
+        for file in files:
+            os.remove(f"{Paths.pdf_path.value}/{file}")
+        return HttpResponse(f"Cleaned up {len(files)} files")
 
 class ChangePasswordView(UpdateAPIView):
     """

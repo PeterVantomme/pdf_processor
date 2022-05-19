@@ -42,6 +42,31 @@ class RCExtractor(Extractor):
         result = self.__get_summary(result)
         return json.dumps(result)
     
+    def __get_payment_values(self, row):
+        row_value = [re.search("^[0-9]{1,4}[.,]{1,}[0-9]{1,}.?[0-9]*",value)[0] for value in row if re.search("^[0-9]{1,4}[.,]{1,}[0-9]{1,}.?[0-9]*", value) is not None][0]
+        row_value_clean = float(row_value.replace(".","").replace(",","."))
+        payment_entries = {}
+        payment_entries["Bedrag in uw voordeel"]=0.00 if len(row)==np.where(row==row_value)[0] or len(row)==np.where(row==row_value)[0]+1 else row_value_clean
+        payment_entries["Bedrag @FOD Financiën"]=row_value_clean if len(row)==np.where(row==row_value)[0] or len(row)==np.where(row==row_value)[0]+1 else 0.00
+        return payment_entries
+
+    def __get_data(self):
+        tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True, table_areas=['0,550,620,30'])
+        if tables[0].df.shape[1]==1:
+            tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True, table_areas=['0,500,620,30']) 
+    
+        table = tables[0].df
+        full_date_regex = "^([0-9].\/){2}[0-9]{4}"
+        last_balance = pd.DataFrame(table.loc[table.loc[:,0].str.contains("Vorig saldo op", regex=True, case=False)])
+        situations_df = pd.DataFrame(table.loc[table.loc[:,0].str.contains("Toestand eind|Toestand tot", regex=True, case=False)])
+        details_df = pd.DataFrame(table.loc[table.loc[:,0].str.contains(full_date_regex, regex=True)])
+        
+        detail_frame = self.__get_detail(details_df)
+        situation_frame = self.__get_situations(situations_df)
+        formatted_data = self.__get_formatted_data(detail_frame, situation_frame, last_balance)
+
+        return formatted_data
+    
     def __get_summary(self, result):
         df = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}",flavor='stream', split_text=True, table_areas=['30,650,350,500'])[0].df
         try:
@@ -66,92 +91,31 @@ class RCExtractor(Extractor):
                 result["samenvatting"]["te betalen"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[2])[0].replace(".","").replace(",",".")
         return result
 
-    def __get_data(self):
-        tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True, table_areas=['0,550,620,30'])
-        if tables[0].df.shape[1]==1:
-            tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True, table_areas=['0,500,620,30']) 
-    
-        table = tables[0]
-        try:
-            if table.shape[1] > 3:
-                df_combined_temp = pd.DataFrame(pd.Series(table.df.iloc[:,:4].values.tolist()).str.join(","))
-                df = table.df.copy().iloc[:,2:]
-                df.loc[:,0] = df_combined_temp
-                df = df.loc[:,[0,4,6]]
-            else:
-                df = table.df.copy()
-        except KeyError:
-            if table.shape[1] > 3:
-                df_combined_temp = pd.DataFrame(pd.Series(table.df.iloc[:,:2].values.tolist()).str.join(","))
-                df = table.df.copy().iloc[:,2:]
-                df.loc[:,0] = df_combined_temp
-                df = df.loc[:,[0,2,3]]
-        
-        detail_frame = self.__get_detail(df)
-        situation_frame = self.__get_situations(df)
-        formatted_data = self.__get_formatted_data(detail_frame, situation_frame)
+    def __get_detail(self,details_df):
+        details_d = {}
+        full_date_regex = "^([0-9].\/){2}[0-9]{4}"
+        for detail in details_df.values:
+            booking_date = re.search(full_date_regex,detail[0])[0]
+            dict_entry = {}
+            subject = detail[1] if len(detail)>4 else detail[0].split("\n")[1]
+            dict_entry.update(self.__get_payment_values(detail))
+            dict_entry["Uitwerkingsdatum"] = detail[2] if re.search(full_date_regex,detail[1]) is None else re.search(full_date_regex,detail[1])[0]
+            details_d[f"Boekingsdatum {booking_date} voor {subject}"] = dict_entry
+        return details_d
 
-        return formatted_data
+    def __get_situations(self, situations_df):
+        situations_d = {}
+        for situation in situations_df.values:
+            dict_entry = self.__get_payment_values(situation)
+            situation_date = [re.search("[0-9]{2}\/[0-9]{4}",value)[0] for value in situation if re.search("[0-9]{2}\/[0-9]{4}", value) is not None][0]
+            situations_d[f"{situation[0]} {situation_date}"]=dict_entry
+        return situations_d
 
-    def __get_detail(self,df):
-        details_information = [row for row in df.iloc[:,0] if re.match(re.compile("[A-Z]*[0-9].*[0-9]|[0-9]*\/"),row)]
-        details = df.loc[df.loc[:,0].isin(details_information),:]
-        details
-
-        if details.shape[1] > 3:
-            details[0] = details.loc[:,0].apply(lambda x: x.replace(",","\n"))
-            details[0] = details[0]+"\n"+details[2]
-            details = details.drop([2,4],axis=1)
-            details.columns = [0,1,2]
-
-        elif details.shape[1] < 3:
-            details[2] = details.loc[details.loc[:,0].str.contains("A|U"),1]
-            details = details.assign(benef=lambda x: x.apply(lambda y:y[1] if y[2] is np.nan else "0,00", axis=1)).drop(1,axis=1)
-            details = details.assign(owed= details[2].fillna("0,00")).drop(2,axis=1)
-            details = details.loc[:,[0,"benef","owed"]]
-        
-        return details
-
-    def __get_situations(self, df):
-        situation_information = [row for row in df.iloc[:,0] if re.search(re.compile("TOESTAND|Toestand|Vorig saldo"),row)]
-        situations = df.loc[df.loc[:,0].isin(situation_information),:]
-
-        if situations.shape[1] < 3:
-            situations = situations.assign(owed=lambda x: x[1].str.split("\n").apply(lambda y: y[1]))
-            situations = situations.assign(benef=lambda x: x[1].str.split("\n").apply(lambda y: y[0]))
-            situations.drop(1, axis=1, inplace=True)
-            situations = situations.loc[:,[0,"benef","owed"]]
-
-        elif situations.shape[1] > 3:
-            situations[0] = situations.loc[:,0].apply(lambda x: x.replace(",","\n"))
-            situations[0] = situations[0]+""+situations[2]
-            situations = situations.drop([2,4],axis=1)
-            situations.columns = [0,1,2]
-
-        return situations
-
-    def __get_formatted_data(self, details, situations):
-        detail_d={}
-        indexer = 0
-        for row in details.values:
-            indexer += 1
-            detail_d[indexer] = {"Boekingsdatum":re.search(re.compile("[0-9]*\/[0-9]*\/[0-9]{4}"),row[0])[0],
-                                "Onderwerp":re.search(re.compile("[A-Z]-[0-9]*.[0-9]{4}|[A-Z]"),row[0])[0],
-                                "Uitwerkingsdatum":re.search(re.compile("[0-9]*\/[0-9]*\/[0-9]{4}"),row[0])[0].replace("\n",""),
-                                "In uw voordeel":row[1].replace(".","").replace(",","."),
-                                "Verschuldigd @FODF": row[2].replace(".","").replace(",","."),}
-            date_of_last_balance = re.search(re.compile("[0-9]*\/[0-9]*\/[0-9]{4}"),situations.iloc[0,0].replace(",",""))[0]
-
+    def __get_formatted_data(self, details, situations, last_balance):
         result = {}
-        for row in situations.values:
-            if pd.Series(row).str.contains("toestand", regex=True, case=False)[0]:
-                    result[row[0].replace("\n"," ").replace(",","")]= {"In uw voordeel": row[1],
-                                    "Verschuldigd @FODF": row[2]}   
-
-        result[f"Vorig saldo op datum {date_of_last_balance}"] ={"In uw voordeel": situations.iloc[0,1],
-                                                                "Verschuldigd @FODF": situations.iloc[0,2]}
-                                        
-        result["Details"] = detail_d
+        result["Vorige balans"] = self.__get_payment_values(last_balance.iloc[0,:])
+        result["Toestanden"] = situations
+        result["Detail"] = details
         return result
 
     def get_json(self):
@@ -301,12 +265,13 @@ class AkteExtractor(Extractor):
     def __get_data_from_ocr(self, pdf, get_ref_code=False):
         textstring = ""
         max_range = pdf.page_count if get_ref_code else pdf.page_count if pdf.page_count<3 else 3
-        for i in range(max_range): #Checks first 3 pages for content, no more because it would take alot of and resources.
+        for i in range(max_range): #Checks first 3 pages for content, no more because it would use alot of resources.
             img_first_page = fitz.Pixmap(pdf, pdf.get_page_images(i)[0][0])
             img_first_page.save("temp_img_text.jpg")
             del img_first_page
             img = cv2.imread("temp_img_text.jpg")
             os.remove("temp_img_text.jpg")
+            del img
             textstring += pytesseract.image_to_string(img) 
         if get_ref_code:
             ref_regex = re.compile("[0-9].-[A-Z]-([0-9].\/)*[0-9]{4}-[0-9]{5}")
