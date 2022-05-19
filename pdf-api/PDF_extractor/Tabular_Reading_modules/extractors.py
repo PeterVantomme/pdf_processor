@@ -10,7 +10,6 @@ import pytesseract
 
 from ..Config import Paths as filepaths
 
-
 class Extractor():
     def __init__(self, doc_type, doc_name):
         self.doc_type = doc_type
@@ -26,10 +25,45 @@ class Extractor():
         pass
 
     def get_json(self):
-        pass
+        return self.json_result
 
     def cleanup_document_location(self):
         os.remove(f"{filepaths.pdf_path.value}/{self.doc_name}")
+
+class BelastingExtractor(Extractor):
+    def __init__(self, doc_type, doc_name):
+        super().__init__(doc_type, doc_name)
+
+    def get_customer_info(self):
+        customer_info_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True,table_areas=['250,775,620,650'])
+        info = customer_info_table[0]
+        customer_info = [value[0] for value in info.df[2:].values]   
+        return customer_info
+
+    def get_data(self, type):
+        if type == "VENNOOTSCHAP":
+            vervaldatum_regex = re.compile("[0-9].\..*")
+        else:
+            vervaldatum_regex = re.compile("[0-9].\\.*")
+        data_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,500,620,400'])
+        table = data_table[0].df
+        aanslagbiljet_info = {}
+        table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
+        #helper methods
+        amount_to_pay_or_receive_by_index = float([row.split("€")[1].strip() for row in table.loc[:,0] if "€" in row][0].replace(".","").replace(",","."))
+        aanslagbiljet_info["Te betalen bedrag"] = amount_to_pay_or_receive_by_index
+        try:
+            aanslagbiljet_info["Rekeningnummer"] = re.search("[A-Z].[0-9].*[0-9]",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer: ")[1])[0]
+        except IndexError:
+            aanslagbiljet_info["Rekeningnummer"] = re.search(re.compile("[A-Z].[0-9].*[0-9]"),table.loc[table.iloc[:,0].str.contains("compte bancaire")].values[0][0])[0]
+        try:
+            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling|communication structurée", regex=True, case=False)].values[0][0])[1].strip()  
+            aanslagbiljet_info["Vervaldatum"] = re.search(vervaldatum_regex,table.loc[table.iloc[:,0].str.contains("ten laatste|au plus tard le", regex=True, case=False)].values[0][0])[0]
+        except IndexError: #Terug te krijgen bedrag ipv te betalen
+            aanslagbiljet_info["Bedrag in uw voordeel"] = aanslagbiljet_info["Te betalen bedrag"]
+            del aanslagbiljet_info["Te betalen bedrag"]
+
+        return aanslagbiljet_info
 
 class RCExtractor(Extractor):
     def __init__(self, doc_name):
@@ -73,22 +107,22 @@ class RCExtractor(Extractor):
             vat = re.findall("([0-9].+?.+)",df.iloc[0,0])[0]
             df = df.iloc[[3,4],:]
             pay_receive_string = re.search("Te betalen saldo|Terug te krijgen|Over te dragen saldo", df.iloc[0,1])[0]
-            result["samenvatting"] = {"BTW-nummer":vat,
+            result["Samenvatting"] = {"BTW-nummer":vat,
                         "ontbrekende aangiftes": 0 if "*****" in df.iloc[1,0] else df.iloc[1,0],
                         pay_receive_string: float(df.iloc[1,1].replace(".","").replace(",","."))}
         except IndexError:
-            result["samenvatting"] = {}
+            result["Samenvatting"] = {}
             document = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}",flavor='stream',table_areas=['30,700,650,100'])
             data = document[0].df
             vat_nr = re.search(re.compile("([0-9].+?.+)"),data.loc[data.loc[:,0].str.contains("Registratienummer")][0].values[0])[0]
-            result["samenvatting"]["BTW-nummer"] = vat_nr
+            result["Samenvatting"]["BTW-nummer"] = vat_nr
             amount = data.loc[data[0].str.contains("TOTAAL")].values[0]
             if re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[0]) is not None:
-                result["samenvatting"]["terug te geven"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[0])[0].replace(".","").replace(",",".")
+                result["Samenvatting"]["terug te geven"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[0])[0].replace(".","").replace(",",".")
             elif re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[1]) is not None:
-                result["samenvatting"]["over te dragen"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[1])[0].replace(".","").replace(",",".")
+                result["Samenvatting"]["over te dragen"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[1])[0].replace(".","").replace(",",".")
             elif re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[2]) is not None:
-                result["samenvatting"]["te betalen"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[2])[0].replace(".","").replace(",",".")
+                result["Samenvatting"]["te betalen"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[2])[0].replace(".","").replace(",",".")
         return result
 
     def __get_detail(self,details_df):
@@ -121,44 +155,18 @@ class RCExtractor(Extractor):
     def get_json(self):
         return self.json_result
         
-class PBExtractor(Extractor):
+class PBExtractor(BelastingExtractor):
     def __init__(self, doc_name):
-        super().__init__("PB", doc_name)
+        self.doc_name = doc_name
+        self.super_extractor = BelastingExtractor("PB",doc_name)
         self.json_result = self.__transform_extraction()#automatically calls the extractor methods
         self.cleanup_document_location()
     
     def __transform_extraction(self):
-        complete_info = json.dumps({"klantinfo":self.__get_customer_info(),"aanslagbiljet":self.__get_data(), "details":self.__get_details()})
+        complete_info = json.dumps({"klantinfo": self.super_extractor.get_customer_info(), "aanslagbiljet":self.super_extractor.get_data(type="PERSOON"), "details":self.__get_detail()})
         return complete_info
-    
-    def __get_customer_info(self):
-        customer_info_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True,table_areas=['250,775,620,650'])
-        info = customer_info_table[0]
-        customer_info = [value[0] for value in info.df[2:].values]   
-        return customer_info
-    
-    def __get_data(self):
-        data_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,500,620,400'])
-        table = data_table[0].df
-        aanslagbiljet_info = {}
-        table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
-        #helper methods
-        amount_to_pay_or_receive_by_index = float([row.split("€")[1].strip() for row in table.loc[:,0] if "€" in row][0].replace(".","").replace(",","."))
-        aanslagbiljet_info["Te betalen bedrag"] = amount_to_pay_or_receive_by_index
-        try:
-            aanslagbiljet_info["Rekeningnummer"] = re.search("[A-Z].[0-9].*[0-9]",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer: ")[1])[0]
-        except IndexError:
-            aanslagbiljet_info["Rekeningnummer"] = re.search(re.compile("[A-Z].[0-9].*[0-9]"),table.loc[table.iloc[:,0].str.contains("compte bancaire")].values[0][0])[0]
-        try:
-            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling|communication structurée", regex=True, case=False)].values[0][0])[1].strip()  
-            aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\/.*",table.loc[table.iloc[:,0].str.contains("ten laatste|au plus tard le", regex=True, case=False)].values[0][0])[0]
-        except IndexError: #Terug te krijgen bedrag ipv te betalen
-            aanslagbiljet_info["Bedrag in uw voordeel"] = aanslagbiljet_info["Te betalen bedrag"]
-            del aanslagbiljet_info["Te betalen bedrag"]
 
-        return aanslagbiljet_info
-
-    def __get_details(self):
+    def __get_detail(self):
         tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,700,625,500'], pages="3")
         df = tables[0].df
         start_idx_row = df[df[0].str.contains("[Cc]ode",regex=True, case=True) == True].index[0]
@@ -184,42 +192,16 @@ class PBExtractor(Extractor):
     def get_json(self):
         return self.json_result
 
-class VBExtractor(Extractor):
+class VBExtractor(BelastingExtractor):
     def __init__(self, doc_name):
-        super().__init__("PB", doc_name)
+        self.doc_name = doc_name
+        self.super_extractor = BelastingExtractor("VB",doc_name)
         self.json_result = self.__transform_extraction()#automatically calls the extractor methods
         self.cleanup_document_location()
 
     def __transform_extraction(self):
-        complete_info = json.dumps({"klanteninfo":self.__get_customer_info(), "Betaling/Ontvangs/Overdracht":self.__get_data()})
+        complete_info = json.dumps({"klantinfo":self.super_extractor.get_customer_info(), "Betaling/Ontvangs/Overdracht":self.super_extractor.get_data(type="VENNOOTSCHAP")})
         return complete_info
-
-    def __get_customer_info(self):
-        customer_info_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True,table_areas=['250,775,620,650'])
-        info = customer_info_table[0]
-        customer_info = [value[0] for value in info.df[2:].values]   
-        return customer_info
-
-    def __get_data(self):
-        data_table = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,500,620,400'])
-        table = data_table[0].df
-        aanslagbiljet_info = {}
-        table = pd.DataFrame(pd.Series(table.values.tolist()).str.join(""))
-        #helper methods
-        amount_to_pay_or_receive_by_index = float([row.split("€")[1].strip() for row in table.loc[:,0] if "€" in row][0].replace(".","").replace(",","."))
-        aanslagbiljet_info["Te betalen bedrag"] = amount_to_pay_or_receive_by_index
-        try:
-            aanslagbiljet_info["Rekeningnummer"] = re.search("[A-Z].[0-9].*[0-9]",table.loc[table.iloc[:,0].str.contains("rekeningnummer")].values[0][0].split("rekeningnummer: ")[1])[0]
-        except IndexError:
-            aanslagbiljet_info["Rekeningnummer"] = re.search(re.compile("[A-Z].[0-9].*[0-9]"),table.loc[table.iloc[:,0].str.contains("compte bancaire")].values[0][0])[0]
-        try:
-            aanslagbiljet_info["Mededeling"] = re.split(":.",table.loc[table.iloc[:,0].str.contains("mededeling|communication structurée", regex=True, case=False)].values[0][0])[1].strip()  
-            aanslagbiljet_info["Vervaldatum"] = re.search("[0-9].\..*",table.loc[table.iloc[:,0].str.contains("ten laatste|au plus tard le", regex=True, case=False)].values[0][0])[0]
-        except IndexError: #Terug te krijgen bedrag ipv te betalen
-            aanslagbiljet_info["Bedrag in uw voordeel"] = aanslagbiljet_info["Te betalen bedrag"]
-            del aanslagbiljet_info["Te betalen bedrag"]
-
-        return aanslagbiljet_info
 
     def get_json(self):
         return self.json_result
@@ -304,7 +286,7 @@ class AkteExtractor(Extractor):
     #4 - Via OCR-extraheren
     def __get_data_from_ocr(self, pdf, get_ref_code=False):
         textstring = ""
-        max_range = pdf.page_count if get_ref_code else pdf.page_count if pdf.page_count<3 else 3
+        max_range = pdf.page_count if pdf.page_count<3 else 3
         for i in range(max_range): #Checks first 3 pages for content, no more because it would use alot of resources.
             img_first_page = fitz.Pixmap(pdf, pdf.get_page_images(i)[0][0])
             img_first_page.save("temp_img_text.jpg")
@@ -322,7 +304,7 @@ class AkteExtractor(Extractor):
     def __get_reference_code_from_text(self, pdf):
         try:
             ref = self.__get_data_from_selectable_text(pdf, True)
-        except Exception as e:
+        except Exception:
             ref = self.__get_data_from_ocr(pdf, True)
         if ref is None:
             return None
