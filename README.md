@@ -22,6 +22,9 @@
 **All URI's besides register require an authorization header with Bearer {token}**
   
 ## Changelog:
+23/05/2022
+- Added manual and notebooks.
+
 19/05/2022:
 - Fixed BUG where RC-extractor didnt't recognise more than two rows of the "Toestand" type.
 - Added Cleanup URI functionality so user can remove unnecessary files.
@@ -32,8 +35,4 @@
 18/05/2022: 
 - Current version supports rc, pb and ak information extraction as well as QR-code reading.
 - Secret key generated upon starting server.
-- Nginx & Gunicorn WSGI as supporting reverse proxy & webserver
-
-## Todo:
-19/05/2022:
-- Create manual for creating new extractors and usage of the API.
+- Nginx & Gunicorn WSGI as supporting reverse proxy & webserver.
