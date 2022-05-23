@@ -1,10 +1,10 @@
-_id: req_e2e49304a72248ae99ba6141f3858292
+_id: req_28602cd7feba4e32b547d1f29d17e105
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290749554
-created: 1652167312222
-url: "{{ _.scheme }}://{{ _.main_url }}/extract/pb"
-name: Send_PB_file
+modified: 1653290754469
+created: 1653290424619
+url: "{{ _.scheme }}://{{ _.main_url }}/extract/vb"
+name: Send_VB_file
 description: ""
 method: POST
 body:
@@ -15,7 +15,7 @@ body:
       value: ""
       description: ""
       type: file
-      fileName: C:\Users\pva677\Downloads\aanslagbiljet-test-2021 - test 1.pdf
+      fileName: C:\Users\pva677\Downloads\VB_T1pdf.pdf
 parameters: []
 headers:
   - id: pair_f6bb1056b51e46048c9f24960b7f56d0
@@ -27,7 +27,7 @@ headers:
     value: multipart/form-data
     description: ""
 authentication: {}
-metaSortKey: -1652298116494.5
+metaSortKey: -1652298116485.125
 isPrivate: false
 settingStoreCookies: true
 settingSendCookies: true

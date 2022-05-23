@@ -1,9 +1,9 @@
 _id: req_8f0040299cdf4d1081008a241521d4a4
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1652863275998
+modified: 1653291163586
 created: 1652857735889
-url: https://127.0.0.1/register/
+url: "{{ _.scheme }}://{{ _.main_url }}/register/"
 name: Create User
 description: ""
 method: POST
@@ -22,7 +22,7 @@ body:
       name: password2
       value: "{{ _.password }}"
       description: ""
-    - id: pair_623fd555280643438a280999161a951e
+    - id: pair_9314cc9974934e029b1b77ff5a561a9c
       name: email
       value: "{{ _.email }}"
       description: ""
