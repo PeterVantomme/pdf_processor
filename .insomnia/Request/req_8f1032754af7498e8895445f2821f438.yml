@@ -1,9 +1,9 @@
 _id: req_8f1032754af7498e8895445f2821f438
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1652863289221
+modified: 1653290758242
 created: 1652705143179
-url: https://localhost/extract/akte
+url: "{{ _.scheme }}://{{ _.main_url }}/extract/ak"
 name: Send_Akte_file
 description: ""
 method: POST
@@ -27,7 +27,7 @@ headers:
     value: multipart/form-data
     description: ""
 authentication: {}
-metaSortKey: -1652298116444.5
+metaSortKey: -1652298116475.75
 isPrivate: false
 settingStoreCookies: true
 settingSendCookies: true

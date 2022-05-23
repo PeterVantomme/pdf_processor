@@ -1,21 +1,21 @@
-_id: req_a8d0580a79cd496fb36cc66981f9be39
+_id: req_0bdbb3ba765c4c89b5d4a4b35eecca7c
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290657341
-created: 1651732969292
-url: "{{ _.scheme }}://{{ _.main_url }}/user/"
-name: Get User
+modified: 1653291204566
+created: 1653290499902
+url: "{{ _.scheme }}://{{ _.main_url }}/cleanup"
+name: Cleanup
 description: ""
-method: GET
+method: DELETE
 body: {}
 parameters: []
 headers:
-  - id: pair_a5aa035c1c644bf59264bf5ec257283f
+  - id: pair_468285780b6045cbac4393d343615af1
     name: Authorization
     value: Bearer {{ _.token }}
     description: ""
 authentication: {}
-metaSortKey: -1652298116644.5
+metaSortKey: -1652298116344.5
 isPrivate: false
 settingStoreCookies: true
 settingSendCookies: true

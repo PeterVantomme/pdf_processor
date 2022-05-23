@@ -1,9 +1,9 @@
 _id: req_36b396e731f74cfbbf8eb8c22962cbde
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1652863293921
+modified: 1653291200069
 created: 1651739281650
-url: https://localhost/qr/test_document_shifted.pdf
+url: "{{ _.scheme }}://{{ _.main_url }}/qr/HPD201324TC-20220202-122003-014.pdf"
 name: Get_QR_pdf
 description: ""
 method: GET

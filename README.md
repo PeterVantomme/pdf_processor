@@ -13,6 +13,7 @@
 - /user/change-password : accepts multipart form data with old_password and new_password.
 - /extract/rc : accepts multipart form data with file & returns JSON with information about the document.
 - /extract/pb : accepts multipart form data with file & returns JSON with information about the document.
+- /extract/vb : accepts multipart form data with file & returns JSON with information about the document.
 - /extract/ak : accepts multipart form data with file & returns JSON with information about the document.
 - /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
 - /qr/{filename} : returns file with relevant pages.
@@ -25,6 +26,8 @@
 - Fixed BUG where RC-extractor didnt't recognise more than two rows of the "Toestand" type.
 - Added Cleanup URI functionality so user can remove unnecessary files.
 - Reworked RC to work more efficiënt.
+- Added exceptions.
+- Added extractor for type "Vennootschapsbelasting".
 
 18/05/2022: 
 - Current version supports rc, pb and ak information extraction as well as QR-code reading.
@@ -34,6 +37,3 @@
 ## Todo:
 19/05/2022:
 - Create manual for creating new extractors and usage of the API.
-
-18/05/2022:
-- Add exception messages.

@@ -1,9 +1,9 @@
 _id: req_ae07cdac4bb04a08911c8ca5da85dbbc
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1652863278340
+modified: 1653290650210
 created: 1651732723843
-url: http://127.0.0.1/token/
+url: "{{ _.scheme }}://{{ _.main_url }}/token/"
 name: Authorization
 description: ""
 method: POST
