@@ -11,8 +11,20 @@ from pyzbar.pyzbar import decode
 import binascii
 
 ###Globals
+#This key is NOT the secretkey, rather the key needed tot extract information from QR-code.
 KEY = Auth.decrypt.value
 DATA_DIRECTORY = Paths.pdf_path.value
+
+## Main method (called by API main.py)
+def read_file(clean_qr):
+    try:
+        result = process_QR(clean_qr)
+        qr_content = decrypt_message(result)
+        return qr_content
+    except IndexError:
+        raise IndexError
+    except binascii.Error:
+        raise binascii.Error
 
 ## Decrypting
 def decrypt(laravelEncrypedStringBase64, laravelAppKeyBase64):
@@ -57,15 +69,6 @@ def process_QR(img):
         content = decode(img)[0].data.decode("utf-8")
     except IndexError:
         raise IndexError
+    finally:
+        del img
     return content
-
-## Main method (called by API main.py)
-def read_file(clean_qr):
-    try:
-        result = process_QR(clean_qr)
-        qr_content = decrypt_message(result)
-        return qr_content
-    except IndexError:
-        raise IndexError
-    except binascii.Error:
-        raise binascii.Error

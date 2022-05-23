@@ -7,14 +7,13 @@ from rest_framework import status
 from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer, RegisterSerializer
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
-import gc
 from .Config import Paths
 from django.http import HttpResponse
 from django.contrib.auth.models import User
 import os
 import json
 
-# ViewSets define the view behavior.
+# View for getting information from PDF-documents, calls extractor and returns JSON.
 class PDF_Extract_ViewSet(ViewSet):
     """
     An endpoint extracting information from PDF (RC/PB/AK).
@@ -35,11 +34,9 @@ class PDF_Extract_ViewSet(ViewSet):
             response = HttpResponse(json.dumps(f"Check file type, is this a document of type {filetype}? (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         finally:
-            gc.collect()
             return response
         
-
-# ViewSets define the view behavior.
+# View for reading QR-code from first page and returning the remaining pages.
 class QR_ViewSet(ViewSet):
     """
     An endpoint for processing QR & returning remaining pages.
@@ -47,6 +44,7 @@ class QR_ViewSet(ViewSet):
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
 
+    # Returns remaining pages of PDF-document and removes that document once it has been returned.
     @action(detail=True, methods=['get'])
     def get_file(self, request, filename):
         try:
@@ -56,9 +54,9 @@ class QR_ViewSet(ViewSet):
         except FileNotFoundError:
             response =  Response(json.dumps(f"File {filename} not found"),status=status.HTTP_404_NOT_FOUND)
         finally:
-            gc.collect()
             return response
 
+    # Returns JSON with content of the QR-code after processing.
     def create(self, request):
         try:
             file_uploaded = request.FILES.get('file')
@@ -71,10 +69,9 @@ class QR_ViewSet(ViewSet):
         except IndexError:
             response = HttpResponse(json.dumps(f"No QR-code detected on this document (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
         finally:
-            gc.collect()
             return response
 
-
+# Returns data of the current user.
 class Userview(RetrieveAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
@@ -82,10 +79,12 @@ class Userview(RetrieveAPIView):
     def get_object(self):
         return self.request.user
 
+# Used for Registering new users.
 class RegisterView(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
 
+# Cleans up the whole "documents" folder.
 class CleanupView(ViewSet):
     permission_classes = (IsAuthenticated,)
 
@@ -97,6 +96,7 @@ class CleanupView(ViewSet):
         filestring = "file" if len(files) == 1 else "files"
         return Response(json.dumps(f"Cleaned up {len(files)} {filestring}"), status=status.HTTP_200_OK)
 
+# Changes current users' password.
 class ChangePasswordView(UpdateAPIView):
     """
     An endpoint for changing password.

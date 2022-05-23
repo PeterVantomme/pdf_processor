@@ -3,6 +3,7 @@ from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
 import json
 
+# Checks filetype and returns the correct extractor. Filetype is provided by the URL iteself.
 class ExtractorController:
     def assign_to_extractor(self, doc_name, filetype):
         filetype = filetype.lower().strip()
@@ -15,9 +16,10 @@ class ExtractorController:
         elif filetype in ["akte","acte", "ak"]:
             extractor = AkteExtractor(doc_name)
         else:
-            return "Filetype not supported \n Supported filetypes URI's: /rc, /pb, /akte"
+            return "Filetype not supported \n Supported filetypes URI's: /rc, /pb, /ak, /vb"
         return extractor.get_json()
 
+# Controls execution of QR-reader. First interpret, if it fails, try to transform and interpret again.
 class QRController:
     def get_qr_from_document(self,doc_name):
         image = transform_file(doc_name)

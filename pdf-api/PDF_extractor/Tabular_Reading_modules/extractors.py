@@ -10,6 +10,9 @@ import pytesseract
 
 from ..Config import Paths as filepaths
 
+# Superclass (partially abstract)
+# Used for all extractors and contains basic methods required for all extractors.
+# This also creates structure in how extractors are built.
 class Extractor():
     def __init__(self, doc_type, doc_name):
         self.doc_type = doc_type
@@ -30,6 +33,8 @@ class Extractor():
     def cleanup_document_location(self):
         os.remove(f"{filepaths.pdf_path.value}/{self.doc_name}")
 
+# Extractor superclass for reading all PDF-documents for tax (PB & VB)
+# Contains shared methods
 class BelastingExtractor(Extractor):
     def __init__(self, doc_type, doc_name):
         super().__init__(doc_type, doc_name)
@@ -65,17 +70,20 @@ class BelastingExtractor(Extractor):
 
         return aanslagbiljet_info
 
+# Extractor for reading RC-type documents (Rekening Courant/BTW-uittreksel)
 class RCExtractor(Extractor):
     def __init__(self, doc_name):
         super().__init__("RC", doc_name)
         self.json_result = self.__transform_extraction()#automatically calls the extractor methods
         self.cleanup_document_location()
-
+    
+    # dict -> JSON
     def __transform_extraction(self):
         result = self.__get_data()
         result = self.__get_summary(result)
         return json.dumps(result)
     
+    # Helper method for extracting the payment values from the details-table.
     def __get_payment_values(self, row):
         row_value = [re.search("^[0-9]{1,4}[.,]{1,}[0-9]{1,}.?[0-9]*",value)[0] for value in row if re.search("^[0-9]{1,4}[.,]{1,}[0-9]{1,}.?[0-9]*", value) is not None][0]
         row_value_clean = float(row_value.replace(".","").replace(",","."))
@@ -84,6 +92,7 @@ class RCExtractor(Extractor):
         payment_entries["Bedrag @FOD Financiën"]=row_value_clean if len(row)==np.where(row==row_value)[0] or len(row)==np.where(row==row_value)[0]+1 else 0.00
         return payment_entries
 
+    # Combines all data and returns it as a dictionary.
     def __get_data(self):
         tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', split_text=True, table_areas=['0,550,620,30'])
         if tables[0].df.shape[1]==1:
@@ -101,6 +110,7 @@ class RCExtractor(Extractor):
 
         return formatted_data
     
+    # Returns data from blue table at the top of the page.
     def __get_summary(self, result):
         df = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}",flavor='stream', split_text=True, table_areas=['30,650,350,500'])[0].df
         try:
@@ -125,6 +135,7 @@ class RCExtractor(Extractor):
                 result["Samenvatting"]["te betalen"] = re.search("[0-9]?.[0-9]{0,3},[0-9]{0,2}",amount[2])[0].replace(".","").replace(",",".")
         return result
 
+    # Returns table containing detailed information (bookings) about how the sum in the summary has been calculated.
     def __get_detail(self,details_df):
         details_d = {}
         full_date_regex = "^([0-9].\/){2}[0-9]{4}"
@@ -137,6 +148,7 @@ class RCExtractor(Extractor):
             details_d[f"Boekingsdatum {booking_date} voor {subject}"] = dict_entry
         return details_d
 
+    # Returns table containing detailed information (situations at end of each month) about how the sum in the summary has been calculated.
     def __get_situations(self, situations_df):
         situations_d = {}
         for situation in situations_df.values:
@@ -145,6 +157,7 @@ class RCExtractor(Extractor):
             situations_d[f"{situation[0]} {situation_date}"]=dict_entry
         return situations_d
 
+    # Structuring dict before transforming to JSON.
     def __get_formatted_data(self, details, situations, last_balance):
         result = {}
         result["Vorige balans"] = self.__get_payment_values(last_balance.iloc[0,:])
@@ -154,7 +167,7 @@ class RCExtractor(Extractor):
 
     def get_json(self):
         return self.json_result
-        
+# Extractor for reading PB-type documents (Personenbelasting)        
 class PBExtractor(BelastingExtractor):
     def __init__(self, doc_name):
         self.doc_name = doc_name
@@ -162,10 +175,12 @@ class PBExtractor(BelastingExtractor):
         self.json_result = self.__transform_extraction()#automatically calls the extractor methods
         self.cleanup_document_location()
     
+    # Returns JSON from combined dicts
     def __transform_extraction(self):
         complete_info = json.dumps({"klantinfo": self.super_extractor.get_customer_info(), "aanslagbiljet":self.super_extractor.get_data(type="PERSOON"), "details":self.__get_detail()})
         return complete_info
 
+    # Returns more detailed information by extracting the tax-codes with their values from the document.
     def __get_detail(self):
         tables = camelot.read_pdf(f"{filepaths.pdf_path.value}/{self.doc_name}", flavor='stream', table_areas=['50,700,625,500'], pages="3")
         df = tables[0].df
@@ -191,7 +206,7 @@ class PBExtractor(BelastingExtractor):
         
     def get_json(self):
         return self.json_result
-
+# Extractor for reading VB-type documents (Vennootschapsbelasting)        
 class VBExtractor(BelastingExtractor):
     def __init__(self, doc_name):
         self.doc_name = doc_name
@@ -199,19 +214,25 @@ class VBExtractor(BelastingExtractor):
         self.json_result = self.__transform_extraction()#automatically calls the extractor methods
         self.cleanup_document_location()
 
+    # Returns JSON from combined dicts
     def __transform_extraction(self):
         complete_info = json.dumps({"klantinfo":self.super_extractor.get_customer_info(), "Betaling/Ontvangs/Overdracht":self.super_extractor.get_data(type="VENNOOTSCHAP")})
         return complete_info
 
     def get_json(self):
         return self.json_result
-
+# Extractor for reading AK-type documents (Aktes (alle types))      
 class AkteExtractor(Extractor):
     def __init__(self, doc_name):
         super().__init__("Akte", doc_name)
         self.json_result = self.__transform_extraction()#automatically calls the extractor methods
         self.cleanup_document_location()
     
+    # Returns JSON of data dictionary, prioritising the finding of a reference code.
+    # First searches annotations for reference code and information
+    # If annotations don't contatin sufficient information, looks in selectable text for reference code and information
+    # If selected text not available, uses OCR to extract information and reference code from scanned document
+    # Has difficulty reading handwritten notes, if no reference code is found, returns empty dict
     def __transform_extraction(self):
         datadict = {}
         pdf = fitz.open(f"{filepaths.pdf_path.value}/{self.doc_name}")
@@ -237,6 +258,7 @@ class AkteExtractor(Extractor):
 
         return json.dumps(datadict)
 
+    # Returns data from annots (if available)
     def __get_data_from_annots(self, pdf):
         annot_list = []
         annots = pdf[0].annots(types=fitz.PDF_ANNOT_SQUARE)
@@ -258,13 +280,14 @@ class AkteExtractor(Extractor):
             reference_code = None if reference_code is None else reference_code[0]
         return reference_code, annot_list
 
+    # Returns data from selectable text (e.g. docx to pdf converted documents)
     def __get_data_from_selectable_text(self, pdf, get_ref_code=False):
         if isinstance(pdf,str) == False or isinstance(pdf, type(fitz.Document)):
             textstring = pdf[0].get_text()
         else:
             textstring = pdf
         if len(textstring) == 0:
-            raise Exception("No selectable text, run on OCR")
+            return self.__get_data_from_ocr(pdf, True) # Needed when there's no/not enough data in the selectable text, returns list of keywords.
         textstring = textstring.replace(","," ").replace(".","\next").replace("?","\next").replace("\n","\next").replace('"',' ').replace("!","\next").split("\next")
         worddict={}
         if get_ref_code:
@@ -283,7 +306,7 @@ class AkteExtractor(Extractor):
         df = df.loc[:,~df.columns.duplicated()]
         return df
 
-    #4 - Via OCR-extraheren
+    # (4) Returns data by using OCR (e.g. scanned documents)
     def __get_data_from_ocr(self, pdf, get_ref_code=False):
         textstring = ""
         max_range = pdf.page_count if pdf.page_count<3 else 3
@@ -291,21 +314,18 @@ class AkteExtractor(Extractor):
             img_first_page = fitz.Pixmap(pdf, pdf.get_page_images(i)[0][0])
             img_first_page.save("temp_img_text.jpg")
             del img_first_page
-            img = cv2.imread("temp_img_text.jpg")
+            img = cv2.imread("temp_img_text.jpg") #Temporary saves image (needed for pytesseract since it cant read np arrays)
             os.remove("temp_img_text.jpg")
             textstring += pytesseract.image_to_string(img) 
             del img
         if get_ref_code:
             ref_regex = re.compile("[0-9].-[A-Z]-([0-9].\/)*[0-9]{4}-[0-9]{5}")
             return re.search(ref_regex, textstring)
-        text1_worddf = self.__get_data_from_selectable_text(textstring)
+        text1_worddf = self.__get_data_from_selectable_text(textstring) #Uses selectable text method to transform textstring into dataframe since text is selectable now.
         return list(text1_worddf.columns)
     
     def __get_reference_code_from_text(self, pdf):
-        try:
-            ref = self.__get_data_from_selectable_text(pdf, True)
-        except Exception:
-            ref = self.__get_data_from_ocr(pdf, True)
+        ref = self.__get_data_from_selectable_text(pdf, True)
         if ref is None:
             return None
         else:
