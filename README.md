@@ -23,6 +23,7 @@
   
 ## Changelog:
 23/05/2022
+- Fixed memoryleak in QR-segment
 - Added manual and notebooks.
 
 19/05/2022:
@@ -36,3 +37,12 @@
 - Current version supports rc, pb and ak information extraction as well as QR-code reading.
 - Secret key generated upon starting server.
 - Nginx & Gunicorn WSGI as supporting reverse proxy & webserver.
+
+## Used libraries:
+- PyMuPDF for processing PDF documents
+- PyTesseract for OCR on Extractors
+- PyZBAR for reading QR-codes
+- Camelot for detecting tables and extracting text
+- OpenCV for transforming QR-image
+- Django & Django REST Framework for API interface
+- Numpy and Pandas for Array/DataFrame manipulation
