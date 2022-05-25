@@ -1,4 +1,5 @@
 from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor, VBExtractor
+from .Tabular_Reading_modules.ocr import read_scanned_document
 from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
 import json
@@ -18,6 +19,10 @@ class ExtractorController:
         else:
             return "Filetype not supported \n Supported filetypes URI's: /rc, /pb, /ak, /vb"
         return extractor.get_json()
+
+class OCRController:
+    def convert(doc_name):
+        return read_scanned_document(doc_name).is_succeeded()
 
 # Controls execution of QR-reader. First interpret, if it fails, try to transform and interpret again.
 class QRController:

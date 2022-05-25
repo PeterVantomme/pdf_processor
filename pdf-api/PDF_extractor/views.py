@@ -7,8 +7,9 @@ from rest_framework import status
 from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer, RegisterSerializer
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
+from .helpers import OCRController as ocr
 from .Config import Paths
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.contrib.auth.models import User
 import os
 import json
@@ -68,6 +69,27 @@ class QR_ViewSet(ViewSet):
             response = Response(qc().get_qr_from_document(filename))
         except IndexError:
             response = HttpResponse(json.dumps(f"No QR-code detected on this document (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
+        finally:
+            return response
+
+class OCR_ViewSet(ViewSet):
+    permission_classes = (IsAuthenticated,)
+
+    @action(detail=False, methods=['post'])
+    def convert_to_text(self, request):
+        try:
+            file_uploaded = request.FILES.get('file')
+            filename = file_uploaded.name
+            with open(f"{Paths.pdf_path.value}/{filename}",  "wb") as f:
+                for chunk in file_uploaded.chunks():
+                    f.write(chunk)
+            is_succeeded = ocr.convert(filename)
+            if is_succeeded:
+                response = FileResponse(open(f"{Paths.pdf_path.value}/{filename}", "rb"), content_type='application/pdf')
+            else:
+                raise IndexError()
+        except IndexError:
+            response = HttpResponse(json.dumps(f"Not able to convert to text (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
         finally:
             return response
 

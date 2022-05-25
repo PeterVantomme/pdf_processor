@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import PDF_Extract_ViewSet, QR_ViewSet, Userview, ChangePasswordView, RegisterView, CleanupView
+from .views import PDF_Extract_ViewSet, QR_ViewSet, Userview, ChangePasswordView, RegisterView, CleanupView, OCR_ViewSet
 from rest_framework_simplejwt.views import (TokenObtainPairView,TokenRefreshView)
 
 router = routers.DefaultRouter()
@@ -18,5 +18,6 @@ urlpatterns = [
     path('extract/<str:filetype>', PDF_Extract_ViewSet.as_view({'post': 'extract_data'}), name='extract_data'),
     path('register/', RegisterView.as_view(), name='auth_register'),
     path('qr/', QR_ViewSet.as_view({'post': 'create'}), name='qr_create'),
+    path('ocr/', OCR_ViewSet.as_view({'post': 'convert_to_text'}), name='ocr_convert'),
     path('cleanup/', CleanupView.as_view({'delete': 'cleanup'}), name='cleanup'),
 ]
