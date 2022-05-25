@@ -86,10 +86,12 @@ class OCR_ViewSet(ViewSet):
             is_succeeded = ocr.convert(filename)
             if is_succeeded:
                 response = FileResponse(open(f"{Paths.pdf_path.value}/{filename}", "rb"), content_type='application/pdf')
+                os.remove(f"{Paths.pdf_path.value}/{filename}")
             else:
                 raise IndexError()
         except IndexError:
             response = HttpResponse(json.dumps(f"Not able to convert to text (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
+            os.remove(f"{Paths.pdf_path.value}/{filename}")
         finally:
             return response
 
