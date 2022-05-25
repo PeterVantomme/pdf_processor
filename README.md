@@ -15,6 +15,7 @@
 - /extract/pb : accepts multipart form data with file & returns JSON with information about the document.
 - /extract/vb : accepts multipart form data with file & returns JSON with information about the document.
 - /extract/ak : accepts multipart form data with file & returns JSON with information about the document.
+- /ocr: accepts multipart form data with file & returns document in a selectable-text pdf format.
 - /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
 - /qr/{filename} : returns file with relevant pages.
 - /cleanup : removes QR-files that weren't requested.
@@ -22,6 +23,10 @@
 **All URI's besides register require an authorization header with Bearer {token}**
   
 ## Changelog:
+25/05/2022
+- Simplified Akte Extractor
+- Added OCR-module that returns scanned-documents as documents with selectable text.
+
 23/05/2022
 - Fixed memoryleak in QR-segment
 - Added manual and notebooks.
