@@ -51,3 +51,8 @@
 - OpenCV for transforming QR-image
 - Django & Django REST Framework for API interface
 - Numpy and Pandas for Array/DataFrame manipulation
+
+# TODO:
+- Add swagger documentation
+- Put Nginx and api in one container, required for Azure deployment
+- Make sure all traffic goes through Nginx first
