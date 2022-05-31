@@ -7,6 +7,9 @@ router = routers.DefaultRouter()
 router.register(r'extract', PDF_Extract_ViewSet, basename="extract")
 router.register(r'qr', QR_ViewSet, basename="qr")
 
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
+
 # Wire up our API using automatic URL routing.
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -19,4 +22,12 @@ urlpatterns = [
     path('qr/', QR_ViewSet.as_view({'post': 'create'}), name='qr_create'),
     path('ocr/', OCR_ViewSet.as_view({'post': 'convert_to_text'}), name='ocr_convert'),
     path('cleanup/', CleanupView.as_view({'delete': 'cleanup'}), name='cleanup'),
+    path("v1/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "docs/",
+        SpectacularSwaggerView.as_view(
+            template_name="swagger-ui.html", url="schema"
+        ),
+        name="swagger-ui",
+    ),
 ]
