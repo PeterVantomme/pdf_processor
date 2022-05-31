@@ -22,12 +22,8 @@ urlpatterns = [
     path('qr/', QR_ViewSet.as_view({'post': 'create'}), name='qr_create'),
     path('ocr/', OCR_ViewSet.as_view({'post': 'convert_to_text'}), name='ocr_convert'),
     path('cleanup/', CleanupView.as_view({'delete': 'cleanup'}), name='cleanup'),
-    path("v1/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "docs/",
-        SpectacularSwaggerView.as_view(
-            template_name="swagger-ui.html", url="schema"
-        ),
-        name="swagger-ui",
-    ),
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    # Optional UI:
+    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
 ]
