@@ -8,20 +8,20 @@
 - Now u can use the API freely
 
 ## URI's:
-- /register : accepts multipart form data with password, password2, username and email.
-- /token : accepts multipart form data with username and password.
-- /refresh : accepts multipart form data with refresh.
-- /user : shows data of current user.
-- /docs :  swagger documentation.
-- /user/change-password : accepts multipart form data with old_password and new_password.
-- /extract/rc : accepts multipart form data with file & returns JSON with information about the document.
-- /extract/pb : accepts multipart form data with file & returns JSON with information about the document.
-- /extract/vb : accepts multipart form data with file & returns JSON with information about the document.
-- /extract/ak : accepts multipart form data with file & returns JSON with information about the document.
-- /ocr: accepts multipart form data with file & returns document in a selectable-text pdf format.
-- /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
-- /qr/{filename} : returns file with relevant pages. "documents" folder will only hold newest 25 documents.
-- /cleanup : removes QR-files that weren't requested.
+- /register : Accepts multipart form data with password, password2, username and email.
+- /token : Accepts multipart form data with username and password.
+- /refresh : Accepts multipart form data with refresh.
+- /user : Shows data of current user.
+- /docs :  Swagger documentation.
+- /user/change-password : Accepts multipart form data with old_password and new_password.
+- /extract/rc : Accepts multipart form data with file & returns JSON with information about the document.
+- /extract/pb : Accepts multipart form data with file & returns JSON with information about the document.
+- /extract/vb : Accepts multipart form data with file & returns JSON with information about the document.
+- /extract/ak : Accepts multipart form data with file & returns JSON with information about the document.
+- /ocr: Accepts multipart form data with file & returns document in a selectable-text pdf format.
+- /qr : Accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
+- /qr/{filename} : Returns file with relevant pages. Internal "documents" folder will only hold newest 25 documents.
+- /cleanup : Removes QR-files that weren't requested.
  
 **All URI's besides register, token, refresh and docs require an authorization header with Bearer {token}**
   
