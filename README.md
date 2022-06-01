@@ -20,7 +20,7 @@
 - /extract/ak : accepts multipart form data with file & returns JSON with information about the document.
 - /ocr: accepts multipart form data with file & returns document in a selectable-text pdf format.
 - /qr : accepts multipart form data with file & returns decrypted message in qr-code and filename, make sure the first page contains the QR-code.
-- /qr/{filename} : returns file with relevant pages.
+- /qr/{filename} : returns file with relevant pages. "documents" folder will only hold newest 25 documents.
 - /cleanup : removes QR-files that weren't requested.
  
 **All URI's besides register, token, refresh and docs require an authorization header with Bearer {token}**
