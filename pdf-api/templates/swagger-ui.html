@@ -13,7 +13,7 @@
     <script src="https://unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
     <script>
         const ui = SwaggerUIBundle({
-            url: "{% v1/schema %}",
+            url: "{% url 'schema' %}",
             dom_id: '#swagger-ui',
             presets: [
                 SwaggerUIBundle.presets.apis,

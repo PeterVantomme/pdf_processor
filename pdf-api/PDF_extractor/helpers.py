@@ -1,8 +1,9 @@
-from .Tabular_Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor, VBExtractor
-from .Tabular_Reading_modules.ocr import read_scanned_document
+from .Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor, VBExtractor
+from .Reading_modules.ocr import read_scanned_document
 from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
-import json
+import json, os
+from .Config import Paths
 
 # Checks filetype and returns the correct extractor. Filetype is provided by the URL iteself.
 class ExtractorController:
@@ -27,12 +28,20 @@ class OCRController:
 # Controls execution of QR-reader. First interpret, if it fails, try to transform and interpret again.
 class QRController:
     def get_qr_from_document(self,doc_name):
-        image = transform_file(doc_name)
         try:
+            image = transform_file(doc_name)
             output = self.__interpret(image)
         except IndexError:
             output = self.__interpret(transform_image(image))
+        self.__remove_oldest_file()
         return self.__structure_data(output, doc_name)
+
+    # Removes oldest file in documents folder when 25 files are saved. This is to save disk space.
+    def __remove_oldest_file(self):
+        list_of_files = os.listdir(Paths.pdf_path.value)
+        full_path = [Paths.pdf_path.value+"/{0}".format(x) for x in list_of_files]
+        oldest_file = min(full_path, key=os.path.getctime)
+        os.remove(oldest_file)
 
     def __interpret(self,image):
         return read_file(image) #Returns QR code

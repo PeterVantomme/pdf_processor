@@ -1,10 +1,13 @@
+from tokenize import String
+from django.forms import CharField
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView, UpdateAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import CharField
 from rest_framework.decorators import action
 from rest_framework import status
-from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer, RegisterSerializer
+from .serializers import UploadSerializer, UserSerializer, ChangePasswordSerializer, RegisterSerializer, FileReturnSerializer, QRReturnSerializer, ExtractReturnSerializer
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
 from .helpers import OCRController as ocr
@@ -13,39 +16,52 @@ from django.http import FileResponse, HttpResponse
 from django.contrib.auth.models import User
 import os
 import json
-
+from fitz import FileDataError
+from drf_spectacular.utils import extend_schema, inline_serializer
 # View for getting information from PDF-documents, calls extractor and returns JSON.
+
 class PDF_Extract_ViewSet(ViewSet):
     """
-    An endpoint extracting information from PDF (RC/PB/AK).
+    Extracting of information from PDF file given the type of the document..
     """
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
-
+    @extend_schema(parameters=["Document Type"],
+                   responses={200: ExtractReturnSerializer, 
+                              400:inline_serializer('Error 400', fields={'detail': CharField()}),
+                              402:inline_serializer('Error 402', fields={'detail': CharField()}),})
     @action(detail=True, methods=['post'])
-    def extract_data(self, request, filetype):
+    def extract_data(self, request, documenttype):
         try:
-            file_uploaded = request.FILES.get('file')
+            file_uploaded = request.FILES.get('file_uploaded')
             filename = file_uploaded.name
             with open(f"{Paths.pdf_path.value}/{filename}",  "wb") as f:
                 for chunk in file_uploaded.chunks():
                     f.write(chunk)
-            response = Response(ec().assign_to_extractor(filename, filetype))
-        except IndexError:
-            response = HttpResponse(json.dumps(f"Check file type, is this a document of type {filetype}? (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
-            os.remove(f"{Paths.pdf_path.value}/{filename}")
+            response = Response(ec().assign_to_extractor(filename, documenttype))
+        #except IndexError or AttributeError:
+        #    response = HttpResponse(json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+        #    os.remove(f"{Paths.pdf_path.value}/{filename}")
+        except AttributeError:
+            response = HttpResponse(json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST)
+        except NotImplementedError:
+            response = HttpResponse(json.dumps({"detail":f"Document filetype of {filename} not supported"}),status=status.HTTP_400_BAD_REQUEST)
         finally:
             return response
         
 # View for reading QR-code from first page and returning the remaining pages.
 class QR_ViewSet(ViewSet):
     """
-    An endpoint for processing QR & returning remaining pages.
+    Processing of QR-code on documents where first page contains a QR code for classifcation & returning remaining pages.
     """
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
 
-    # Returns remaining pages of PDF-document and removes that document once it has been returned.
+    @extend_schema(description="Returns remaining pages of PDF-document and removes that document once it has been returned.",
+                   responses={200: FileReturnSerializer,
+                              404: inline_serializer('Error 404', fields={'detail': CharField()}),
+                              402: inline_serializer('Error 402', fields={'detail': CharField()})
+    })
     @action(detail=True, methods=['get'])
     def get_file(self, request, filename):
         try:
@@ -57,28 +73,40 @@ class QR_ViewSet(ViewSet):
         finally:
             return response
 
-    # Returns JSON with content of the QR-code after processing.
+    @extend_schema(description="Returns JSON with content of the QR-code after processing.",
+                   responses={200:QRReturnSerializer, 
+                              400:inline_serializer('Error 400', fields={'detail': CharField()}),
+                              402: inline_serializer('Error 402', fields={'detail': CharField()})})
     def create(self, request):
         try:
-            file_uploaded = request.FILES.get('file')
+            file_uploaded = request.FILES.get('file_uploaded')
             filename = file_uploaded.name
             with open(f"documents/{filename}",  "wb") as f:
                 for chunk in file_uploaded.chunks():
                     f.write(chunk)
-            
             response = Response(qc().get_qr_from_document(filename))
         except IndexError:
             response = HttpResponse(json.dumps(f"No QR-code detected on this document (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            response = HttpResponse(json.dumps(f"No file found in request, make sure key value is 'file_uploaded'"),status=status.HTTP_400_BAD_REQUEST)
+        except FileDataError:
+            response = HttpResponse(json.dumps(f"{filename} is not a valid PDF document"),status=status.HTTP_400_BAD_REQUEST)
         finally:
             return response
 
 class OCR_ViewSet(ViewSet):
+    """
+    Processing of scanned document, returns a pdf-file with selectable text.
+    """
     permission_classes = (IsAuthenticated,)
-
+    @extend_schema(responses={200: FileReturnSerializer,
+                              402: inline_serializer('Error 402', fields={'detail': CharField()}),
+                              400: inline_serializer('Error 400', fields={'detail': CharField()})
+                              })
     @action(detail=False, methods=['post'])
     def convert_to_text(self, request):
         try:
-            file_uploaded = request.FILES.get('file')
+            file_uploaded = request.FILES.get('file_uploaded')
             filename = file_uploaded.name
             with open(f"{Paths.pdf_path.value}/{filename}",  "wb") as f:
                 for chunk in file_uploaded.chunks():
@@ -90,8 +118,14 @@ class OCR_ViewSet(ViewSet):
             else:
                 raise IndexError()
         except IndexError:
-            response = HttpResponse(json.dumps(f"Not able to convert to text (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(json.dumps({"detail":f"Not able to convert to text (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
             os.remove(f"{Paths.pdf_path.value}/{filename}")
+        except AttributeError:
+            response = HttpResponse(json.dumps({"detail":"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST)
+        except ReferenceError:
+            response = HttpResponse(json.dumps({"detail":f"File not readable. Uploaded file must be a PDF-document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+        except FileDataError:
+            response = HttpResponse(json.dumps({"detail":f"File not readable. Uploaded file might be broken or not a PDF-document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
         finally:
             return response
 
@@ -110,15 +144,20 @@ class RegisterView(CreateAPIView):
 
 # Cleans up the whole "documents" folder.
 class CleanupView(ViewSet):
+    """
+    Removes documents from the "documents" folder if they weren't requested.
+    """
     permission_classes = (IsAuthenticated,)
-
+    @extend_schema(responses={200: inline_serializer('Files deleted', fields={'message': CharField()}),
+                              402: inline_serializer('Error 402', fields={'detail': CharField()})
+                              })
     @action(detail=False, methods=['delete'])
     def cleanup(self, request):
         files = os.listdir(Paths.pdf_path.value)
         for file in files:
             os.remove(f"{Paths.pdf_path.value}/{file}")
         filestring = "file" if len(files) == 1 else "files"
-        return Response(json.dumps(f"Cleaned up {len(files)} {filestring}"), status=status.HTTP_200_OK)
+        return Response(json.dumps({"message":f"Cleaned up {len(files)} {filestring}"}), status=status.HTTP_200_OK)
 
 # Changes current users' password.
 class ChangePasswordView(UpdateAPIView):
@@ -133,6 +172,8 @@ class ChangePasswordView(UpdateAPIView):
         obj = self.request.user
         return obj
 
+    @extend_schema(responses={200: inline_serializer('Files deleted', fields={'message': CharField()}),
+                              400: inline_serializer('Error 404', fields={'detail': CharField()})})
     def update(self, request, *args, **kwargs):
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)

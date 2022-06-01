@@ -10,6 +10,21 @@ class UploadSerializer(Serializer):
     class Meta:
         fields = ['file_uploaded']
 
+class FileReturnSerializer(Serializer):
+    file = FileField()
+    class Meta:
+        fields = ['file']
+
+class QRReturnSerializer(Serializer):
+    qr = CharField()
+    class Meta:
+        fields = ['qr']
+
+class ExtractReturnSerializer(Serializer):
+    extracted_information = CharField()
+    class Meta:
+        fields = ['extracted_information']
+
 class UserSerializer(ModelSerializer):
     class Meta:
         model = get_user_model()

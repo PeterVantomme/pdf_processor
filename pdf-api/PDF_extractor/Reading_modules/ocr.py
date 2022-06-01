@@ -7,8 +7,14 @@ from ..Config import Paths as filepaths
 
 class read_scanned_document():
     def __init__(self, doc_name):
+        self.succeeded = False
         TOOLS = fitz.TOOLS
         filename = f"{filepaths.pdf_path.value}/{doc_name}"
+        self.__process_document(filename)
+        TOOLS.store_shrink(101)
+        self.succeeded = True
+    
+    def __process_document(self, filename):
         pdf_in = fitz.open(filename)
         pdf=FPDF()
         for i in range(len(pdf_in)):
@@ -22,10 +28,12 @@ class read_scanned_document():
             textstring = textstring.encode('latin-1', 'replace').decode('latin-1')
             pdf.multi_cell(0,10,textstring)
         pdf.output(filename,'F')
-        del img
-        TOOLS.store_shrink(101)
-        self.succeeded = True
-    
+        try:
+            del img
+        except UnboundLocalError:
+            self.is_succeeded = False
+            raise ReferenceError
+
     def is_succeeded(self):
         return self.succeeded
         
