@@ -1,4 +1,5 @@
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-310/)
+![GitHub last commit](https://img.shields.io/github/last-commit/PeterVantomme/pdf_processor)
 # pdf_processor v1
 ## Usage:
 - Use docker-compose to start the application within a Docker environment
