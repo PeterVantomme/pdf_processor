@@ -10,6 +10,7 @@
 - /token : accepts multipart form data with username and password.
 - /refresh : accepts multipart form data with refresh.
 - /user : shows data of current user.
+- /docs :  swagger documentation.
 - /user/change-password : accepts multipart form data with old_password and new_password.
 - /extract/rc : accepts multipart form data with file & returns JSON with information about the document.
 - /extract/pb : accepts multipart form data with file & returns JSON with information about the document.
@@ -23,6 +24,10 @@
 **All URI's besides register require an authorization header with Bearer {token}**
   
 ## Changelog:
+01/06/2022
+- Added swagger
+- Updated Exceptions to be more descriptive
+
 25/05/2022
 - Simplified Akte Extractor
 - Added OCR-module that returns scanned-documents as documents with selectable text.
@@ -53,6 +58,4 @@
 - Numpy and Pandas for Array/DataFrame manipulation
 
 # TODO:
-- Add swagger documentation
 - Put Nginx and api in one container, required for Azure deployment
-- Make sure all traffic goes through Nginx first
