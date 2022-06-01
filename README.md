@@ -27,6 +27,7 @@
 01/06/2022
 - Added swagger
 - Updated Exceptions to be more descriptive
+- Updated Insomnia documentation
 
 25/05/2022
 - Simplified Akte Extractor
