@@ -21,7 +21,7 @@
 - /qr/{filename} : returns file with relevant pages.
 - /cleanup : removes QR-files that weren't requested.
  
-**All URI's besides register require an authorization header with Bearer {token}**
+**All URI's besides register, token, refresh and docs require an authorization header with Bearer {token}**
   
 ## Changelog:
 01/06/2022
