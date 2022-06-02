@@ -27,8 +27,8 @@ class PDF_Extract_ViewSet(ViewSet):
     permission_classes = (IsAuthenticated,)
     @extend_schema(parameters=["Document Type"],
                    responses={200: ExtractReturnSerializer, 
-                              400:inline_serializer('Error 400', fields={'detail': CharField()}),
-                              402:inline_serializer('Error 402', fields={'detail': CharField()}),})
+                              400:inline_serializer('Error400', fields={'detail': CharField()}),
+                              402:inline_serializer('Error402', fields={'detail': CharField()}),})
     @action(detail=True, methods=['post'])
     def extract_data(self, request, documenttype):
         try:
@@ -58,8 +58,8 @@ class QR_ViewSet(ViewSet):
 
     @extend_schema(description="Returns remaining pages of PDF-document and removes that document once it has been returned.",
                    responses={200: FileReturnSerializer,
-                              404: inline_serializer('Error 404', fields={'detail': CharField()}),
-                              402: inline_serializer('Error 402', fields={'detail': CharField()})
+                              404: inline_serializer('Error404', fields={'detail': CharField()}),
+                              402: inline_serializer('Error402', fields={'detail': CharField()})
     })
     @action(detail=True, methods=['get'])
     def get_file(self, request, filename):
@@ -74,8 +74,8 @@ class QR_ViewSet(ViewSet):
 
     @extend_schema(description="Returns JSON with content of the QR-code after processing.",
                    responses={200:QRReturnSerializer, 
-                              400:inline_serializer('Error 400', fields={'detail': CharField()}),
-                              402: inline_serializer('Error 402', fields={'detail': CharField()})})
+                              400:inline_serializer('Error400', fields={'detail': CharField()}),
+                              402: inline_serializer('Error402', fields={'detail': CharField()})})
     def create(self, request):
         try:
             file_uploaded = request.FILES.get('file_uploaded')
@@ -100,8 +100,8 @@ class OCR_ViewSet(ViewSet):
     
     permission_classes = (IsAuthenticated,)
     @extend_schema(responses={200: FileReturnSerializer,
-                              402: inline_serializer('Error 402', fields={'detail': CharField()}),
-                              400: inline_serializer('Error 400', fields={'detail': CharField()})
+                              402: inline_serializer('Error402', fields={'detail': CharField()}),
+                              400: inline_serializer('Error400', fields={'detail': CharField()})
                               })
     @action(detail=False, methods=['post'])
     def convert_to_text(self, request):
@@ -148,8 +148,8 @@ class CleanupView(ViewSet):
     Removes documents from the "documents" folder if they weren't requested.
     """
     permission_classes = (IsAuthenticated,)
-    @extend_schema(responses={200: inline_serializer('Files deleted', fields={'message': CharField()}),
-                              402: inline_serializer('Error 402', fields={'detail': CharField()})
+    @extend_schema(responses={200: inline_serializer('FilesDeleted', fields={'message': CharField()}),
+                              402: inline_serializer('Error402', fields={'detail': CharField()})
                               })
     @action(detail=False, methods=['delete'])
     def cleanup(self, request):
@@ -172,7 +172,7 @@ class ChangePasswordView(UpdateAPIView):
         obj = self.request.user
         return obj
 
-    @extend_schema(responses={200: inline_serializer('Files deleted', fields={'message': CharField()}),
+    @extend_schema(responses={200: inline_serializer('PasswordChanged', fields={'message': CharField()}),
                               400: inline_serializer('Error 404', fields={'detail': CharField()})})
     def update(self, request, *args, **kwargs):
         self.object = self.get_object()
