@@ -3,6 +3,8 @@ FROM python:3.10.4
 WORKDIR /
 WORKDIR /home/docker
 
+
+# Commands for API
 COPY requirements.txt requirements.txt
 COPY . .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt

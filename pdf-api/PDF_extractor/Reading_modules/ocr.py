@@ -5,7 +5,7 @@ import os
 import pytesseract
 from ..Config import Paths as filepaths
 
-class read_scanned_document():
+class OCR_Reader():
     def __init__(self, doc_name):
         self.succeeded = False
         TOOLS = fitz.TOOLS

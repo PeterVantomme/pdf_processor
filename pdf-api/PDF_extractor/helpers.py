@@ -1,5 +1,5 @@
 from .Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor, VBExtractor
-from .Reading_modules.ocr import read_scanned_document
+from .Reading_modules.ocr import OCR_Reader
 from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
 import json, os
@@ -23,7 +23,7 @@ class ExtractorController:
 
 class OCRController:
     def convert(doc_name):
-        return read_scanned_document(doc_name).is_succeeded()
+        return OCR_Reader(doc_name).is_succeeded()
 
 # Controls execution of QR-reader. First interpret, if it fails, try to transform and interpret again.
 class QRController:
@@ -33,7 +33,7 @@ class QRController:
             output = self.__interpret(image)
         except IndexError:
             output = self.__interpret(transform_image(image))
-        self.__remove_oldest_file()
+        self.__remove_oldest_file() if len(os.listdir(Paths.pdf_path.value)) > 25 else None
         return self.__structure_data(output, doc_name)
 
     # Removes oldest file in documents folder when 25 files are saved. This is to save disk space.

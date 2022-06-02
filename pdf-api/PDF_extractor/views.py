@@ -1,4 +1,3 @@
-from tokenize import String
 from django.forms import CharField
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -98,6 +97,7 @@ class OCR_ViewSet(ViewSet):
     """
     Processing of scanned document, returns a pdf-file with selectable text.
     """
+    
     permission_classes = (IsAuthenticated,)
     @extend_schema(responses={200: FileReturnSerializer,
                               402: inline_serializer('Error 402', fields={'detail': CharField()}),
