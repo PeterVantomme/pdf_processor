@@ -1,21 +1,22 @@
 _id: req_8f1032754af7498e8895445f2821f438
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290758242
+modified: 1654086654565
 created: 1652705143179
 url: "{{ _.scheme }}://{{ _.main_url }}/extract/ak"
 name: Send_Akte_file
-description: ""
+description: Processes file of documenttype "akte". Returns a JSON dictionary
+  containing the extracted information. Layout can vary.
 method: POST
 body:
   mimeType: multipart/form-data
   params:
     - id: pair_4061ac987395401eaffd2e993465919c
-      name: file
+      name: file_uploaded
       value: ""
       description: ""
       type: file
-      fileName: C:\Users\pva677\Downloads\AK_T7_VERKOOPpdf.pdf
+      fileName: C:\Users\pva677\Downloads\AK_T3.pdf
 parameters: []
 headers:
   - id: pair_f6bb1056b51e46048c9f24960b7f56d0

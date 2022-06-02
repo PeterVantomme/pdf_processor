@@ -1,17 +1,18 @@
 _id: req_00d5d5664e014def94805cbb204ef406
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290746255
+modified: 1654087929717
 created: 1651652152320
 url: "{{ _.scheme }}://{{ _.main_url }}/extract/rc"
 name: Send_RC_file
-description: ""
+description: Processes file of documenttype "rekening courant". Returns a JSON
+  dictionary containing the extracted information.
 method: POST
 body:
   mimeType: multipart/form-data
   params:
     - id: pair_c9954b5b1afb4b5a873e179112164d74
-      name: file
+      name: file_uploaded
       value: ""
       description: ""
       type: file

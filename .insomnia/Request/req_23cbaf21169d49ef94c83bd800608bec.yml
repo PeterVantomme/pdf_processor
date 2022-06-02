@@ -1,11 +1,11 @@
 _id: req_23cbaf21169d49ef94c83bd800608bec
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290653908
+modified: 1654088265892
 created: 1652347477228
 url: "{{ _.scheme }}://{{ _.main_url }}/token/refresh/"
 name: Refresh
-description: ""
+description: Returns new active token given a refresh token.
 method: POST
 body:
   mimeType: multipart/form-data

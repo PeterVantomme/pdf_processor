@@ -1,11 +1,11 @@
 _id: req_84b32434b6bc4d09bc007c1246840dae
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290724523
+modified: 1654088268344
 created: 1652339224155
 url: "{{ _.scheme }}://{{ _.main_url }}/user/change-password/"
 name: Change_Password
-description: ""
+description: Used for testing the change password functionality.
 method: PUT
 body:
   mimeType: multipart/form-data

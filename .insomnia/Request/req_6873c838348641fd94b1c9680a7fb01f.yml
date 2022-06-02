@@ -1,12 +1,13 @@
-_id: req_81115eeabe0943f3b5695133739e1813
+_id: req_6873c838348641fd94b1c9680a7fb01f
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1654087484450
-created: 1651738287082
-url: "{{ _.scheme }}://{{ _.main_url }}/qr/"
-name: Send_QR
-description: Reads, cleans and decrypts QR-code content on first page of PDF
-  document. Also returns documentname required to retrieve remaining pages.
+modified: 1654086716437
+created: 1653468668493
+url: "{{ _.scheme }}://{{ _.main_url }}/ocr/"
+name: Send_Scanned_Return_Text
+description: Reads scanned documents and returns content as a PDF document with
+  selectable text. Content per page corresponds to the content per page on
+  original document.
 method: POST
 body:
   mimeType: multipart/form-data
@@ -16,8 +17,7 @@ body:
       value: ""
       description: ""
       type: file
-      fileName: C:\Users\pva677\Documents\QR-code API\Tests and
-        demos\test_document_shifted.pdf
+      fileName: C:\Users\pva677\Downloads\AK_T11.pdf
 parameters: []
 headers:
   - name: Content-Type
@@ -28,7 +28,7 @@ headers:
     value: Bearer {{ _.token }}
     description: ""
 authentication: {}
-metaSortKey: -1652298116435.125
+metaSortKey: -1652298116414.8125
 isPrivate: false
 settingStoreCookies: true
 settingSendCookies: true

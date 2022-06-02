@@ -1,11 +1,11 @@
 _id: req_a8d0580a79cd496fb36cc66981f9be39
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290657341
+modified: 1654088266804
 created: 1651732969292
 url: "{{ _.scheme }}://{{ _.main_url }}/user/"
 name: Get User
-description: ""
+description: Displays basic user info.
 method: GET
 body: {}
 parameters: []

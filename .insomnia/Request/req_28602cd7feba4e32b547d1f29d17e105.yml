@@ -1,17 +1,18 @@
 _id: req_28602cd7feba4e32b547d1f29d17e105
 type: Request
 parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
-modified: 1653290754469
+modified: 1654086651102
 created: 1653290424619
 url: "{{ _.scheme }}://{{ _.main_url }}/extract/vb"
 name: Send_VB_file
-description: ""
+description: Processes file of documenttype "vennootschapsbelasting". Returns a
+  JSON dictionary containing the extracted information.
 method: POST
 body:
   mimeType: multipart/form-data
   params:
     - id: pair_4061ac987395401eaffd2e993465919c
-      name: file
+      name: file_uploaded
       value: ""
       description: ""
       type: file
@@ -27,7 +28,7 @@ headers:
     value: multipart/form-data
     description: ""
 authentication: {}
-metaSortKey: -1652298116485.125
+metaSortKey: -1652298116480.4375
 isPrivate: false
 settingStoreCookies: true
 settingSendCookies: true
