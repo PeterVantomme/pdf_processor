@@ -10,6 +10,7 @@ from .serializers import UploadSerializer, UserSerializer, ChangePasswordSeriali
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
 from .helpers import OCRController as ocr
+from .helpers import ErrorHelper as eh
 from .Config import Paths
 from django.http import FileResponse, HttpResponse
 from django.contrib.auth.models import User
@@ -25,10 +26,9 @@ class PDF_Extract_ViewSet(ViewSet):
     """
     serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
-    @extend_schema(parameters=["Document Type"],
-                   responses={200: ExtractReturnSerializer, 
-                              400:inline_serializer('Error400', fields={'detail': CharField()}),
-                              402:inline_serializer('Error402', fields={'detail': CharField()}),})
+    @extend_schema(responses={200:ExtractReturnSerializer, 
+                              400:eh.get_400(),
+                              402:eh.get_402()})
     @action(detail=True, methods=['post'])
     def extract_data(self, request, documenttype):
         try:
@@ -38,9 +38,9 @@ class PDF_Extract_ViewSet(ViewSet):
                 for chunk in file_uploaded.chunks():
                     f.write(chunk)
             response = Response(ec().assign_to_extractor(filename, documenttype))
-        #except IndexError or AttributeError:
-        #    response = HttpResponse(json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
-        #    os.remove(f"{Paths.pdf_path.value}/{filename}")
+        except IndexError or AttributeError:
+            response = HttpResponse(json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+            os.remove(f"{Paths.pdf_path.value}/{filename}")
         except AttributeError:
             response = HttpResponse(json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST)
         except NotImplementedError:
@@ -58,9 +58,8 @@ class QR_ViewSet(ViewSet):
 
     @extend_schema(description="Returns remaining pages of PDF-document and removes that document once it has been returned.",
                    responses={200: FileReturnSerializer,
-                              404: inline_serializer('Error404', fields={'detail': CharField()}),
-                              402: inline_serializer('Error402', fields={'detail': CharField()})
-    })
+                              404: eh.get_404(),
+                              402: eh.get_402()})
     @action(detail=True, methods=['get'])
     def get_file(self, request, filename):
         try:
@@ -74,8 +73,8 @@ class QR_ViewSet(ViewSet):
 
     @extend_schema(description="Returns JSON with content of the QR-code after processing.",
                    responses={200:QRReturnSerializer, 
-                              400:inline_serializer('Error400', fields={'detail': CharField()}),
-                              402: inline_serializer('Error402', fields={'detail': CharField()})})
+                              400:eh.get_400(),
+                              402:eh.get_402()})
     def create(self, request):
         try:
             file_uploaded = request.FILES.get('file_uploaded')
@@ -97,12 +96,11 @@ class OCR_ViewSet(ViewSet):
     """
     Processing of scanned document, returns a pdf-file with selectable text.
     """
-    
+    serializer_class = UploadSerializer
     permission_classes = (IsAuthenticated,)
     @extend_schema(responses={200: FileReturnSerializer,
-                              402: inline_serializer('Error402', fields={'detail': CharField()}),
-                              400: inline_serializer('Error400', fields={'detail': CharField()})
-                              })
+                              402: eh.get_402(),
+                              400: eh.get_400()})
     @action(detail=False, methods=['post'])
     def convert_to_text(self, request):
         try:
@@ -149,8 +147,7 @@ class CleanupView(ViewSet):
     """
     permission_classes = (IsAuthenticated,)
     @extend_schema(responses={200: inline_serializer('FilesDeleted', fields={'message': CharField()}),
-                              402: inline_serializer('Error402', fields={'detail': CharField()})
-                              })
+                              402: eh.get_402()})
     @action(detail=False, methods=['delete'])
     def cleanup(self, request):
         files = os.listdir(Paths.pdf_path.value)
@@ -173,7 +170,7 @@ class ChangePasswordView(UpdateAPIView):
         return obj
 
     @extend_schema(responses={200: inline_serializer('PasswordChanged', fields={'message': CharField()}),
-                              400: inline_serializer('Error 404', fields={'detail': CharField()})})
+                              400: eh.get_400()})
     def update(self, request, *args, **kwargs):
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)
@@ -195,4 +192,3 @@ class ChangePasswordView(UpdateAPIView):
             return Response(json.dumps(response))
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

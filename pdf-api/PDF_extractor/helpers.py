@@ -1,9 +1,12 @@
+from click import help_option
 from .Reading_modules.extractors import RCExtractor, PBExtractor, AkteExtractor, VBExtractor
 from .Reading_modules.ocr import OCR_Reader
 from .QR_modules.Transform_Data import transform_file, transform_image
 from .QR_modules.QR_Interpreter_ZBAR import read_file
 import json, os
 from .Config import Paths
+from drf_spectacular.utils import inline_serializer
+from django.forms import CharField
 
 # Checks filetype and returns the correct extractor. Filetype is provided by the URL iteself.
 class ExtractorController:
@@ -50,3 +53,11 @@ class QRController:
         data = json.dumps({"filename":doc_name,
                            "data": f"{data}"})
         return data
+
+class ErrorHelper():
+    def get_400():
+        return inline_serializer('Error400', fields={'detail': CharField()})
+    def get_402():
+        return inline_serializer('Error402', fields={'detail': CharField()})
+    def get_404():
+        return inline_serializer('Error404', fields={'detail': CharField()})
