@@ -26,17 +26,20 @@
 **All URI's besides register, token, refresh and docs require an authorization header with Bearer {token}**
   
 ## Changelog:
+02/06/2022
+- Changed dockerfile and docker-compose to put Nginx and API in same container.
+
 01/06/2022
-- Added swagger
-- Updated Exceptions to be more descriptive
-- Updated Insomnia documentation
+- Added swagger.
+- Updated Exceptions to be more descriptive.
+- Updated Insomnia documentation.
 
 25/05/2022
-- Simplified Akte Extractor
+- Simplified Akte Extractor.
 - Added OCR-module that returns scanned-documents as documents with selectable text.
 
 23/05/2022
-- Fixed memoryleak in QR-segment
+- Fixed memoryleak in QR-segment.
 - Added manual and notebooks.
 
 19/05/2022:
@@ -60,5 +63,3 @@
 - Django & Django REST Framework for API interface
 - Numpy and Pandas for Array/DataFrame manipulation
 
-# TODO:
-- Put Nginx and api in one container, required for Azure deployment
