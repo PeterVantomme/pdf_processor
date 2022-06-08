@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-import pandas as pd
 from django.core.management.utils import get_random_secret_key  
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)

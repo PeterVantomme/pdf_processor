@@ -42,9 +42,14 @@ class PDF_Extract_ViewSet(ViewSet):
             response = HttpResponse(content = json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         except AttributeError:
-            response = HttpResponse(content = json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            response = HttpResponse(content = json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded' (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            os.remove(f"{Paths.pdf_path.value}/{filename}")
         except NotImplementedError:
-            response = HttpResponse(content = json.dumps({"detail":f"Document filetype of {filename} not supported"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            response = HttpResponse(content = json.dumps({"detail":f"Document filetype of {documenttype} not supported (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            os.remove(f"{Paths.pdf_path.value}/{filename}")
+        except ValueError:
+            response = HttpResponse(content = json.dumps({"detail":f"Structural error within document, does it contain selectable text? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            os.remove(f"{Paths.pdf_path.value}/{filename}")
         finally:
             return response
         
