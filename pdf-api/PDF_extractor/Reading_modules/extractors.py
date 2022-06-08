@@ -1,3 +1,4 @@
+from cgitb import text
 import json
 import os
 import re
@@ -89,7 +90,7 @@ class RCExtractor(Extractor):
         row_value_clean = float(row_value.replace(".","").replace(",","."))
         payment_entries = {}
         payment_entries["Bedrag in uw voordeel"]=0.00 if len(row)==np.where(row==row_value)[0] or len(row)==np.where(row==row_value)[0]+1 else row_value_clean
-        payment_entries["Bedrag @FOD Financiën"]=row_value_clean if len(row)==np.where(row==row_value)[0] or len(row)==np.where(row==row_value)[0]+1 else 0.00
+        payment_entries["Bedrag @FOD Financien"]=row_value_clean if len(row)==np.where(row==row_value)[0] or len(row)==np.where(row==row_value)[0]+1 else 0.00
         return payment_entries
 
     # Combines all data and returns it as a dictionary.
@@ -234,12 +235,13 @@ class AkteExtractor(Extractor):
 
     def __get_data(self):
         pdf = fitz.open(f"{filepaths.pdf_path.value}/{self.doc_name}")
-        reference_code = self.get_reference_code(pdf)
+        reference_code, textstring = self.get_reference_code(pdf) #textstring is the text of scanned page
         _,annots = self.get_data_from_annots(pdf,regex=None)
 
         annots_temp = self.process_annots(pdf, annots)
         if len(annots_temp)>0:
             annots = annots_temp
+        del textstring
         return reference_code,annots
 
     def get_data_from_annots(self, pdf, regex):
@@ -252,7 +254,7 @@ class AkteExtractor(Extractor):
         annot_list = [element.split("\n") for element in annot_list]
         annot_list = [subitem for item in annot_list for subitem in item if len(subitem)>0]
 
-        #2 - Controleer of annotaties de aktereferentiecode bevatten
+        #Controleer of annotaties de aktereferentiecode bevatten
         reference_code = [element for element in annot_list if re.search(regex,element)] if regex is not None else None
         return reference_code, annot_list
 
@@ -287,6 +289,8 @@ class AkteExtractor(Extractor):
         if reference_code is None:
             textstring_pdf = self.get_string_from_scanned_document(pdf)
             reference_code = self.search_string_for_reference_code(textstring_pdf, reference_code_regex)
+        if isinstance(reference_code, list):
+            reference_code = [entry for entry in reference_code if len(entry)>0 and entry is not None]
         return reference_code, textstring_pdf
 
     def get_image_list(self, pdf):

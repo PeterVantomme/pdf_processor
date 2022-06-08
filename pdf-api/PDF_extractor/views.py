@@ -37,14 +37,14 @@ class PDF_Extract_ViewSet(ViewSet):
             with open(f"{Paths.pdf_path.value}/{filename}",  "wb") as f:
                 for chunk in file_uploaded.chunks():
                     f.write(chunk)
-            response = Response(ec().assign_to_extractor(filename, documenttype))
+            response = HttpResponse(content = ec().assign_to_extractor(filename, documenttype), content_type="application/json")
         except IndexError or AttributeError:
-            response = HttpResponse(json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         except AttributeError:
-            response = HttpResponse(json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except NotImplementedError:
-            response = HttpResponse(json.dumps({"detail":f"Document filetype of {filename} not supported"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":f"Document filetype of {filename} not supported"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         finally:
             return response
         
@@ -67,7 +67,7 @@ class QR_ViewSet(ViewSet):
             response["Content-Disposition"] = 'attachment; filename="%s"' % filename
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         except FileNotFoundError:
-            response =  Response(json.dumps(f"File {filename} not found"),status=status.HTTP_404_NOT_FOUND)
+            response =  HttpResponse(json.dumps(f"File {filename} not found"),status=status.HTTP_404_NOT_FOUND, content_type="application/json")
         finally:
             return response
 
@@ -82,13 +82,13 @@ class QR_ViewSet(ViewSet):
             with open(f"documents/{filename}",  "wb") as f:
                 for chunk in file_uploaded.chunks():
                     f.write(chunk)
-            response = Response(qc().get_qr_from_document(filename))
+            response = HttpResponse(content = qc().get_qr_from_document(filename), content_type="application/json")
         except IndexError:
-            response = HttpResponse(json.dumps(f"No QR-code detected on this document (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps(f"No QR-code detected on this document (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except AttributeError:
-            response = HttpResponse(json.dumps(f"No file found in request, make sure key value is 'file_uploaded'"),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps(f"No file found in request, make sure key value is 'file_uploaded'"),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except FileDataError:
-            response = HttpResponse(json.dumps(f"{filename} is not a valid PDF document"),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps(f"{filename} is not a valid PDF document"),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         finally:
             return response
 
@@ -116,14 +116,14 @@ class OCR_ViewSet(ViewSet):
             else:
                 raise IndexError()
         except IndexError:
-            response = HttpResponse(json.dumps({"detail":f"Not able to convert to text (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":f"Not able to convert to text (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         except AttributeError:
-            response = HttpResponse(json.dumps({"detail":"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except ReferenceError:
-            response = HttpResponse(json.dumps({"detail":f"File not readable. Uploaded file must be a PDF-document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":f"File not readable. Uploaded file must be a PDF-document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except FileDataError:
-            response = HttpResponse(json.dumps({"detail":f"File not readable. Uploaded file might be broken or not a PDF-document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST)
+            response = HttpResponse(content = json.dumps({"detail":f"File not readable. Uploaded file might be broken or not a PDF-document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         finally:
             return response
 
@@ -154,7 +154,7 @@ class CleanupView(ViewSet):
         for file in files:
             os.remove(f"{Paths.pdf_path.value}/{file}")
         filestring = "file" if len(files) == 1 else "files"
-        return Response(json.dumps({"message":f"Cleaned up {len(files)} {filestring}"}), status=status.HTTP_200_OK)
+        return HttpResponse(content = json.dumps({"message":f"Cleaned up {len(files)} {filestring}"}), status=status.HTTP_200_OK, content_type="application/json")
 
 # Changes current users' password.
 class ChangePasswordView(UpdateAPIView):
@@ -189,6 +189,6 @@ class ChangePasswordView(UpdateAPIView):
                 'data': []
             }
 
-            return Response(json.dumps(response))
+            return HttpResponse(content = json.dumps(response), content_type = "application/json")
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return HttpResponse(content = serializer.errors, status=status.HTTP_400_BAD_REQUEST, content_type = "application/json")
