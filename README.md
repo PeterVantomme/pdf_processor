@@ -3,7 +3,7 @@
 # pdf_processor v1
 ## Usage:
 - Use docker-compose to start the application within a Docker environment
-- Register a new user
+- Register a new user (There already exists an user which is used for Insomnia)
 - Login with the new user to get authentication token
 - Now u can use the API freely
 
