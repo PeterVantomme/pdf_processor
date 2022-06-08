@@ -27,6 +27,7 @@
   
 ## Changelog:
 08/06/2022
+- Extended exceptions
 - Fixed reponse header to return application:json contenttype header
 - Fixed bug where two values would be returned in reference code field for AkteExtractor
 
