@@ -26,6 +26,10 @@
 **All URI's besides register, token, refresh and docs require an authorization header with Bearer {token}**
   
 ## Changelog:
+08/06/2022
+- Fixed reponse header to return application:json contenttype header
+- Fixed bug where two values would be returned in reference code field for AkteExtractor
+
 02/06/2022
 - Changed dockerfile and docker-compose to put Nginx and API in same container.
 
