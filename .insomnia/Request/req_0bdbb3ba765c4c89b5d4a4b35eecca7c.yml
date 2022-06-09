@@ -1,0 +1,30 @@
+_id: req_0bdbb3ba765c4c89b5d4a4b35eecca7c
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1654692663491
+created: 1653290499902
+url: "{{ _.scheme }}://{{ _.main_url }}/cleanup"
+name: Cleanup
+description: >-
+  Removes all documents in the internal documents folder.
+
+  <p>
+
+  Note: A maximum of 25 files can be saved internally. When quotum is reached, removes oldest document.
+method: DELETE
+body: {}
+parameters: []
+headers:
+  - id: pair_468285780b6045cbac4393d343615af1
+    name: Authorization
+    value: Bearer {{ _.token }}
+    description: ""
+authentication: {}
+metaSortKey: -1652298116344.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

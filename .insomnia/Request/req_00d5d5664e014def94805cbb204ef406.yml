@@ -1,0 +1,41 @@
+_id: req_00d5d5664e014def94805cbb204ef406
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1654784949318
+created: 1651652152320
+url: "{{ _.scheme }}://{{ _.main_url }}/extract/rc"
+name: Send_RC_file
+description: Processes file of documenttype "rekening courant". Returns a JSON
+  dictionary containing the extracted information.
+method: POST
+body:
+  mimeType: multipart/form-data
+  params:
+    - id: pair_c9954b5b1afb4b5a873e179112164d74
+      name: file_uploaded
+      value: ""
+      description: ""
+      type: file
+      fileName: C:\Users\pva677\Documents\Stagedocumenten\RC_T1_anon.pdf
+parameters: []
+headers:
+  - name: Content-Type
+    value: multipart/form-data
+    id: pair_7a32c19d24d04b4fb0ff3691b9d3289d
+  - id: pair_5d529a939a09479bb8af4fcd3dbd7b3b
+    name: Authorization
+    value: Bearer {{ _.token }}
+    description: ""
+  - id: pair_4ac7447dc6264452b18f8f4185f59974
+    name: ""
+    value: ""
+    description: ""
+authentication: {}
+metaSortKey: -1652298116544.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: false
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

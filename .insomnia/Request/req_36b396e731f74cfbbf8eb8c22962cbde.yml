@@ -1,0 +1,26 @@
+_id: req_36b396e731f74cfbbf8eb8c22962cbde
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1654701635139
+created: 1651739281650
+url: "{{ _.scheme }}://{{ _.main_url }}/qr/QR_Voorbeeld.pdf"
+name: Get_QR_pdf
+description: Use filename acquired through /qr to request PDF document with
+  remaining pages. PDF gets internally deleted when request is processed.
+method: GET
+body: {}
+parameters: []
+headers:
+  - id: pair_9f46659335e14747b45bc43e75c03062
+    name: Authorization
+    value: Bearer {{ _.token }}
+    description: ""
+authentication: {}
+metaSortKey: -1652298116424.9688
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
