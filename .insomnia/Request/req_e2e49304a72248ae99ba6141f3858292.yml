@@ -1,0 +1,38 @@
+_id: req_e2e49304a72248ae99ba6141f3858292
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1654785391238
+created: 1652167312222
+url: "{{ _.scheme }}://{{ _.main_url }}/extract/pb"
+name: Send_PB_file
+description: 'Processes file of documenttype "personenbelasting". Returns a JSON
+  dictionary containing the extracted information. '
+method: POST
+body:
+  mimeType: multipart/form-data
+  params:
+    - id: pair_4061ac987395401eaffd2e993465919c
+      name: file_uploaded
+      value: ""
+      description: ""
+      type: file
+      fileName: C:\Users\pva677\Documents\Stagedocumenten\PB_T1_anon.pdf
+parameters: []
+headers:
+  - id: pair_f6bb1056b51e46048c9f24960b7f56d0
+    name: Authorization
+    value: Bearer {{ _.token }}
+    description: ""
+  - id: pair_d7f4b59f83084ff0bafa55a18840520c
+    name: Content-Type
+    value: multipart/form-data
+    description: ""
+authentication: {}
+metaSortKey: -1652298116494.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

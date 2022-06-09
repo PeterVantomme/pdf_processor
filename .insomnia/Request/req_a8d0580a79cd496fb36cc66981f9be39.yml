@@ -1,0 +1,25 @@
+_id: req_a8d0580a79cd496fb36cc66981f9be39
+type: Request
+parentId: fld_4a8b9bcf62294b09ad972b77a6e2301b
+modified: 1654681725441
+created: 1651732969292
+url: "{{ _.scheme }}://{{ _.main_url }}/user/"
+name: Get User
+description: Displays basic user info.
+method: GET
+body: {}
+parameters: []
+headers:
+  - id: pair_a5aa035c1c644bf59264bf5ec257283f
+    name: Authorization
+    value: Bearer {{ _.token }}
+    description: ""
+authentication: {}
+metaSortKey: -1652298116644.5
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
