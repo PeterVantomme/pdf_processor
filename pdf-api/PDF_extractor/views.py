@@ -38,7 +38,7 @@ class PDF_Extract_ViewSet(ViewSet):
                 for chunk in file_uploaded.chunks():
                     f.write(chunk)
             response = HttpResponse(content = ec().assign_to_extractor(filename, documenttype), content_type="application/json")
-        except IndexError or AttributeError:
+        except IndexError:
             response = HttpResponse(content = json.dumps({"detail":f"Check document type, is this a document of type {documenttype}? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         except AttributeError:
@@ -72,7 +72,7 @@ class QR_ViewSet(ViewSet):
             response["Content-Disposition"] = 'attachment; filename="%s"' % filename
             os.remove(f"{Paths.pdf_path.value}/{filename}")
         except FileNotFoundError:
-            response =  HttpResponse(json.dumps(f"File {filename} not found"),status=status.HTTP_404_NOT_FOUND, content_type="application/json")
+            response =  HttpResponse(json.dumps({"detail":f"File {filename} not found"}),status=status.HTTP_404_NOT_FOUND, content_type="application/json")
         finally:
             return response
 
@@ -89,11 +89,15 @@ class QR_ViewSet(ViewSet):
                     f.write(chunk)
             response = HttpResponse(content = qc().get_qr_from_document(filename), content_type="application/json")
         except IndexError:
-            response = HttpResponse(content = json.dumps(f"No QR-code detected on this document (filename: {filename})"),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            response = HttpResponse(content = json.dumps({"detail":f"No QR-code detected on this document (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except AttributeError:
-            response = HttpResponse(content = json.dumps(f"No file found in request, make sure key value is 'file_uploaded'"),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            response = HttpResponse(content = json.dumps({"detail":f"No file found in request, make sure key value is 'file_uploaded'"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         except FileDataError:
-            response = HttpResponse(content = json.dumps(f"{filename} is not a valid PDF document"),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+            response = HttpResponse(content = json.dumps({"detail":f"{filename} is not a valid PDF document"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except ValueError:
+            response = HttpResponse(content = json.dumps({"detail":f"Structural error within document, does it contain a QR-code? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
+        except:
+            response = HttpResponse(content = json.dumps({"detail":f"Unknown error, is this a valid document? (filename: {filename})"}),status=status.HTTP_400_BAD_REQUEST, content_type="application/json")
         finally:
             return response
 
