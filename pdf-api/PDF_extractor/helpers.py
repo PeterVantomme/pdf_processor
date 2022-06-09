@@ -55,9 +55,14 @@ class QRController:
         return data
 
 class ErrorHelper():
-    def get_400():
-        return inline_serializer('Error400', fields={'detail': CharField()})
-    def get_402():
-        return inline_serializer('Error402', fields={'detail': CharField()})
-    def get_404():
-        return inline_serializer('Error404', fields={'detail': CharField()})
+    def __init__(self):
+        self.er400 = inline_serializer('Error400', fields={'detail': CharField()})
+        self.er402 = inline_serializer('Error402', fields={'detail': CharField()})
+        self.er404 = inline_serializer('Error404', fields={'detail': CharField()})
+
+    def get_400(self):
+        return self.er400
+    def get_402(self):
+        return self.er402
+    def get_404(self):
+        return self.er404

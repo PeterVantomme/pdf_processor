@@ -10,7 +10,7 @@ from .serializers import UploadSerializer, UserSerializer, ChangePasswordSeriali
 from .helpers import ExtractorController as ec
 from .helpers import QRController as qc
 from .helpers import OCRController as ocr
-from .helpers import ErrorHelper as eh
+from .helpers import ErrorHelper as errorhelper
 from .Config import Paths
 from django.http import FileResponse, HttpResponse
 from django.contrib.auth.models import User
@@ -19,6 +19,9 @@ import json
 from fitz import FileDataError
 from drf_spectacular.utils import extend_schema, inline_serializer
 # View for getting information from PDF-documents, calls extractor and returns JSON.
+# Setting errorhelper as global helps OpenAPI make unique inline serializers for each error.
+eh = errorhelper()
+
 
 class PDF_Extract_ViewSet(ViewSet):
     """
