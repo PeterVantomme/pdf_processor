@@ -69,5 +69,5 @@
 - Numpy and Pandas for Array/DataFrame manipulation
 
 ## TODO:
-- Fix bug w docker compose: Error response from daemon: The system cannot find the file specified (Probably caused by Nginx configuration within Docker)
+- Fix bug w docker compose: Error response from daemon: The system cannot find the file specified (Probably caused by Nginx configuration within Docker or Docker itself not finding image)
 
