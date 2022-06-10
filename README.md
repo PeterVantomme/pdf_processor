@@ -68,3 +68,6 @@
 - Django & Django REST Framework for API interface
 - Numpy and Pandas for Array/DataFrame manipulation
 
+## TODO:
+- Fix bug w docker compose: Error response from daemon: The system cannot find the file specified
+
