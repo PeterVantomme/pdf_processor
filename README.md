@@ -26,6 +26,9 @@
 **All URI's besides register, token, refresh and docs require an authorization header with Bearer {token}**
   
 ## Changelog:
+10/06/2022
+- Known bug: docker not detecting image. Solution: first use docker build, then use docker-compose up
+
 08/06/2022
 - Extended exceptions
 - Fixed reponse header to return application:json contenttype header
@@ -67,7 +70,4 @@
 - OpenCV for transforming QR-image
 - Django & Django REST Framework for API interface
 - Numpy and Pandas for Array/DataFrame manipulation
-
-## TODO:
-- Fix bug w docker compose: Error response from daemon: The system cannot find the file specified (Probably caused by Nginx configuration within Docker or Docker itself not finding image)
 
